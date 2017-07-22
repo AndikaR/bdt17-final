@@ -1,0 +1,27 @@
+<% if (success.length) { %>
+  <div class="style-msg successmsg">
+    <div>
+      <i class="icon-thumbs-up"></i>
+      <strong>Well done!</strong>
+    </div>
+    <ul>
+      <% for (var message of success) { %>
+        <li><%= message %></li>
+      <% } %>
+    </ul>
+	</div>
+<% } %>
+
+<% if (error.length) { %>
+  <div class="alert alert-danger">
+    <div>
+      <i class="icon-remove-sign"></i>
+      <strong>Oh snap!</strong> Change a few things up and try submitting again.
+    </div>
+    <ul style="padding-top: 10px; padding-left: 15px; padding-right: 15px;">
+      <% for (var message of error) { %>
+        <li><%= message %></li>
+      <% } %>
+    </ul>
+  </div>
+<% } %>

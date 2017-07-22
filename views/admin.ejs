@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+	<meta charset="utf-8">
+
+	<title>Admin Presentation</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+	  
+	<link href='//fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link type="text/css" rel="stylesheet" href="assets/css/styles.css" />
+	<link rel="stylesheet" href="assets/css/bootstrap.css">
+	<link rel="stylesheet" href="assets/revealjs/css/reveal.css" />
+	<link rel="stylesheet" href="assets/revealjs/css/theme/black.css" id="theme" />
+	<link rel="stylesheet" href="assets/css/fontawesome.css" />
+  <style>
+    svg { width : 100%; height : 100%; }
+  </style>
+  </head>
+
+  <body id="canvas-container">
+    <div class="container">
+      <div class="row">
+        <button class="btn btn-primary navigate" id="navigateLeft">Left</button>
+        <button class="btn btn-primary navigate" id="navigateRight">Right</button>
+        <button class="btn btn-primary navigate" id="navigateUp">Top</button>
+        <button class="btn btn-primary navigate" id="navigateDown">Down</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary navigate" id="navigatePrev">Prev</button>
+        <button class="btn btn-primary navigate" id="navigateNext">Next</button>
+      </div>
+      <% if (success.length) { %>
+        <div>
+          <div class="alert" role="alert" id="message"><%= success %></div>
+        </div>
+      <% } %>
+      <div class="row">
+        <form action="/admin/file-upload" enctype="multipart/form-data" method="post">
+          <input type="text" name="title">
+          <br>
+          <input type="file" name="upload">
+          <br>
+          <input type="submit" value="Upload">
+        </form>
+      </div>
+      <div class="row">
+        <div class="mouse-toggle">
+          <i class="fa fa-mouse-pointer mouse" aria-hidden="true" style="color: red;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Including the JS libraries that we use -->
+    <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+
+    <!-- Bootstrap library -->
+    <script src="assets/js/bootstrap.js"></script>
+
+    <!-- Socket.io library -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      $(function() {
+	      var socket = io('<%= host %>');
+        var mouse_state = false;
+
+        navigator.getUserMedia  = navigator.getUserMedia ||
+                                  navigator.webkitGetUserMedia ||
+                                  navigator.mozGetUserMedia ||
+                                  navigator.msGetUserMedia;
+
+        var video = document.querySelector('video');
+
+        if (navigator.getUserMedia) {
+          navigator.getUserMedia({audio: true, video: false}, function(stream) {
+            video.src = window.URL.createObjectURL(stream);
+          }, errorCallback);
+        } else {
+          video.src = 'somevideo.webm'; // fallback.
+        }
+
+        var prevMouseX, prevMouseY, currMouseX, currMouseY = 0;
+        var prevScreenX, prevScreenY, currScreenX, currScreenY = 0;  
+
+        window.setInterval(function(){
+          if (mouse_state) {
+            $("body").mousemove(function(e) {
+              currMouseX = e.pageX;
+              currMouseY = e.pageY;
+              currScreenX = e.screenX;
+              currScreenY = e.screenY;
+            });
+
+            if (prevMouseX !== currMouseX || prevMouseY !== currMouseY) {
+              var newX = (prevMouseX * currScreenX) / prevScreenX;
+		          var newY = (prevMouseY * currScreenY) / prevScreenY;
+
+              prevMouseX = currMouseX;
+              prevMouseY = currMouseY;
+
+              prevScreenX = currScreenX;
+              prevScreenY = currScreenY;
+
+              socket.emit('mouse_position', { 
+                mx: (newX / $(window).width()), 
+                my: (newY / $(window).height())
+              });
+            }
+          }
+        }, 100);
+
+        function toggle_mouse() {
+          $icon = $('.mouse-toggle').find('.mouse');
+
+          if (!mouse_state) $icon.css('color', 'green');
+          else $icon.css('color', 'red');
+
+          mouse_state = !mouse_state;
+          socket.emit('admin_request', { eventName: 'mouse_toggle', content: mouse_state });
+        };
+
+        $(document).keydown(function(event){
+          if (event.which == "17") toggle_mouse(); //ctrl key
+        });
+
+        $('.mouse-toggle').on('click', function(){
+          toggle_mouse();
+        });
+
+        $('.navigate').on('click', function(){
+          socket.emit('admin_request', { eventName: this.id});
+        });
+      });
+    </script>
+  </body>
+</html>
