@@ -63,23 +63,8 @@
 
     <script>
       $(function() {
-	      var socket = io('<%= host %>');
+	      var socket = io.connect('<%= host %>/admin');
         var mouse_state = false;
-
-        navigator.getUserMedia  = navigator.getUserMedia ||
-                                  navigator.webkitGetUserMedia ||
-                                  navigator.mozGetUserMedia ||
-                                  navigator.msGetUserMedia;
-
-        var video = document.querySelector('video');
-
-        if (navigator.getUserMedia) {
-          navigator.getUserMedia({audio: true, video: false}, function(stream) {
-            video.src = window.URL.createObjectURL(stream);
-          }, errorCallback);
-        } else {
-          video.src = 'somevideo.webm'; // fallback.
-        }
 
         var prevMouseX, prevMouseY, currMouseX, currMouseY = 0;
         var prevScreenX, prevScreenY, currScreenX, currScreenY = 0;  

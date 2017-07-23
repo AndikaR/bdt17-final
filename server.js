@@ -127,44 +127,48 @@ function CustomException(message) {
   this.name = 'CustomException';
 }
 //---------------end of functions---------------
+var admin_io  = io.of('/admin');
+var client_io = io.of('/client');
 
-var presentation = io.of('/').on('connection', function(socket){
-  ++online;
-  io.emit('online_counter', online);
-  update_slide(io);
-
-  socket.on('illegal_hash', function(){    
-    io.emit('force_hash', current);
+admin_io.on('connection', function(socket){
+  socket.on('mouse_position', function(data) {
+    client_io.emit('mouse_position_update', data);
   });
 
-  socket.on('mouse_position', function(data) {
-    io.emit('mouse_position_update', data);
+  socket.on('admin_request', function(data){
+    switch(data.eventName) {
+      case 'mouse_toggle' : client_io.emit('mouse_toggle_update', data.content); break;
+      default : client_io.emit('admin_response', data.eventName); break; 
+    }
+  });
+});
+
+client_io.on('connection', function(socket){
+  ++online;
+  client_io.emit('online_counter', online);
+  update_slide(client_io);
+
+  socket.on('illegal_hash', function(){    
+    client_io.emit('force_hash', current);
   });
 
   socket.on('disconnect', function(data){
     --online;
     if (online > 1)
-      io.emit('online_counter', online);
+      client_io.emit('online_counter', online);
     else {
       current = '#';
-      io.emit('force_hash', current);
+      client_io.emit('force_hash', current);
     }
   });
 
-  socket.on('chat_message', function(msg){ io.emit('chat_message', msg); });
-  socket.on('change_username', function(msg){ io.emit('change_username', msg); });
+  socket.on('chat_message', function(msg){ client_io.emit('chat_message', msg); });
+  socket.on('change_username', function(msg){ client_io.emit('change_username', msg); });
 
   socket.on('change_current', function(data){
     if (data.hash !== '') {
       current = data.hash;
-      io.emit('force_hash', current);
-    }
-  });
-
-  socket.on('admin_request', function(data){
-    switch(data.eventName) {
-      case 'mouse_toggle' : presentation.emit('mouse_toggle_update', data.content); break;
-      default : presentation.emit('admin_response', data.eventName); break; 
+      client_io.emit('force_hash', current);
     }
   });
 });
@@ -180,7 +184,7 @@ app.use(function(req, res, next){
 });
 
 //Routes
-app.get('/admin', loggedIn, function(req, res){
+app.get('/admin', function(req, res){
   var host = getHost(req);
   res.render('admin', { host: host });
 });
@@ -227,6 +231,7 @@ app.post('/admin/file-upload', loggedIn, function(req, res){
 
 app.get('/', function(req, res){
   var host = getHost(req);
+  var root = path.join(__dirname, 'views');
   res.render('index', { hash: current, host: host });
 });
 

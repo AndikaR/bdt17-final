@@ -23,7 +23,7 @@ $(function() {
   );
 	
 	var circle = paper.circle(0, 0, 10).attr({ fill: '#fff' });
-	var socket = io($('#host').val());
+	var socket = io.connect($('#host').val() + '/client');
 
 	var username = 'Guest';
 
