@@ -118,6 +118,10 @@ function loggedIn(req, res, next) {
   else res.redirect('/gateway');
 }
 
+function getHost(req) {
+  return req.protocol + '://' + req.headers.host;
+}
+
 function CustomException(message) {
   this.message = message;
   this.name = 'CustomException';
@@ -177,12 +181,12 @@ app.use(function(req, res, next){
 
 //Routes
 app.get('/admin', loggedIn, function(req, res){
-  var host = 'http://' + req.headers.host;
+  var host = getHost(req);
   res.render('admin', { host: host });
 });
 
 app.post('/admin/file-upload', loggedIn, function(req, res){
-  var host = 'http://' + req.headers.host;
+  var host = getHost(req);
   var form = formidable.IncomingForm();
 
   fse.ensureDir(dir, err => {
@@ -222,7 +226,7 @@ app.post('/admin/file-upload', loggedIn, function(req, res){
 });
 
 app.get('/', function(req, res){
-  var host = 'http://' + req.headers.host;
+  var host = getHost(req);
   res.render('index', { hash: current, host: host });
 });
 
