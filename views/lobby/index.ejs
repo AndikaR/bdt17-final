@@ -1,0 +1,108 @@
+<%- include('../modules/head') -%>
+<body class="stretched">
+
+	<!-- Document Wrapper
+	============================================= -->
+	<div id="wrapper" class="clearfix">
+
+    <%- include('../modules/header-lobby') -%>
+
+		<!-- Content
+		============================================= -->
+		<section id="content">
+      <div class="container clearfix" style="margin-top: 40px;">
+        <div class="fancy-title title-border">
+          <h3>Available Room</h3>
+        </div>
+
+        <div class="row bottommargin-sm clearfix">
+          <div class="col-md-8 bottommargin">
+            <!-- Portfolio Filter
+            ============================================= -->
+            <ul id="portfolio-filter" class="portfolio-filter clearfix" data-container="#portfolio">
+              <li class="activeFilter"><a href="#" data-filter="*">Show All</a></li>
+              <li><a href="#" data-filter=".pf-others">Others</a></li>
+            </ul><!-- #portfolio-filter end -->
+
+            <div class="clear"></div>
+
+            <!-- Portfolio Items
+            ============================================= -->
+            <div id="portfolio" class="portfolio grid-container portfolio-4 clearfix"></div>
+          </div>
+
+          <div class="col-md-4 bottommargin">
+            <% for (var i = 0; i < 4; i++) { %>
+              <div class="spost clearfix">
+                <div class="entry-c">
+                  <div class="entry-title">
+                    <h4><a href="#">UK government weighs Tesla's Model S for its ??5 million electric vehicle fleet</a></h4>
+                  </div>
+                  <ul class="entry-meta">
+                    <li><i class="icon-user"></i> 20th Nov 2014</li>
+                  </ul>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+		</section><!-- #content end -->
+
+		<%- include('../modules/footer') -%>
+
+	</div><!-- #wrapper end -->
+
+	<!-- Go To Top
+	============================================= -->
+	<div id="gotoTop" class="icon-angle-up"></div>
+
+  <%- include('../modules/script') -%>
+  <script>
+    $(function(){
+      var socket = io.connect('<%= host %>/lobby');
+
+      socket.emit('req_available_room');
+
+      socket.on('res_available_room', function(rooms){
+        $('#portfolio').append(rooms);
+         /*
+        for (room of rooms) {
+          console.log(room);
+
+          var html = new EJS({ url: '/templates/room-list'}).render(room);
+          
+        }
+       
+        //var list = EJS();
+        // Get your data
+        var additionalUsers = { users: [ { name: 'Bob' } ] };
+
+        // Moved and renamed the row.html to: /public/templates/row.ejs
+        var html = new EJS({ url: '/templates/row'}).render(additionalUsers);
+
+        // Append the rendered HTML
+        $('tbody').append(html);
+        */
+      });
+
+      socket.on('room_exists', function(msg){
+        $('#room-error').text(msg);
+        $('.room-error').show();
+      });
+
+      socket.on('room_created', function(room_id){
+        $('.room-error').hide();
+        window.location = '/room/' + room_id;
+      });
+
+      $('#c-room').on('click', function(){
+        var room_id   = $('#room-id').val();
+        var room_name = $('#room-name').val();
+
+        socket.emit('create_room', { id:room_id, name:room_name });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<%- include('modules/head') -%>
+<body class="stretched" id="canvas-container">
+	<!--link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+	<link type="text/css" rel="stylesheet" href="assets/css/styles.css" />
+	<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"/>
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+	<link rel="stylesheet" href="assets/css/bootstrap.css">
+	<link rel="stylesheet" href="assets/revealjs/css/reveal.css" />
+	<link rel="stylesheet" href="assets/revealjs/css/theme/black.css" id="theme" />
+	<link rel="stylesheet" href="assets/css/fontawesome.css" -->
+	
+	<style>
+		/*
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body { font: 13px Helvetica, Arial; }
+		form { background:rgba(0,0,0,0.0); padding: 0px; position: fixed; bottom: 0; width: 100%; }
+		#messages { 
+			background:rgba(0,0,0,0.5); 
+			padding: 5px; 
+			margin-bottom: 35px; 
+			position: fixed; 
+			bottom: 0; 
+			width: 100%; 
+			max-height: 300px; 
+			overflow: auto;
+			resize: vertical;
+			z-index: 9;
+		}
+		div.form-group { margin-bottom: 0px; }
+		#messages li { padding: 2px 10px; }
+		.darkorange { color:darkorange }
+		.white { color: white }
+		svg { 
+			width : 100%; 
+			height: -webkit-calc(100% - 35px);
+			height:    -moz-calc(100% - 35px);
+			height:         calc(100% - 35px);
+		}
+		.no-slide { background-image: url('http://via.placeholder.com/1280x800'); width: 100%; height: 100%; }
+		*/
+		.pr-45 { padding-right: 45px !important; }
+		.pl-45 { padding-left: 45px !important; }
+		.pt-5 { padding-top: 5px !important; }
+		.pt-10 { padding-top: 10px !important; }
+	</style>
+	<style>
+		.chat-bar {
+			z-index: 299;
+			position: fixed;
+			width: 100%;
+			height: 60px;
+			background-color: #1ABC9C;
+			font-size: 20px;
+			line-height: 36px;
+			top: auto;
+			bottom: -5px;
+		}
+
+		.chat-square-button {
+			width: 50px;
+			height: 50px;
+		}
+	</style>
+	<!-- Document Wrapper
+	============================================= -->
+	<div id="wrapper" class="clearfix">
+
+    <%- include('modules/header-lobby') -%>
+
+		<!-- Content
+		============================================= -->
+		<section id="content">
+      <div class="container clearfix">
+				<!--div class="reveal">
+					<div class="slides"></div>
+				</div>
+				<div class="chat-list">
+					<ul id="messages" class="resize vertical"></ul>
+				</div>
+				<div class="chat-input">
+					<form action="">
+						<div class="">
+							<div class="form-group">
+								<div class="input-group">
+									<span class="input-group-btn">
+										<button class="btn btn-primary" type="button" id="toggle_chat"><i class="fa fa-comments" aria-hidden="true"></i></button>
+									</span>
+									<span class="input-group-btn">
+										<button class="btn btn-primary" type="button" disabled>
+											<i class="fa fa-users" aria-hidden="true">
+												<span id="online">0</span>
+											</i>
+										</button>
+									</span>
+									<span class="input-group-btn" style="width: 20%;">
+										<input type="text" class="form-control" autocomplete="off" id="username" placeholder="Name"/>
+									</span>
+									<input type="text" class="form-control" id="m" autocomplete="off" placeholder="Message"/>
+									<input type="hidden" id="host" value="<%= host %>" />
+									<div class="input-group-btn">
+										<button class="btn btn-primary" id="sm">
+											<i class="fa fa-paper-plane"></i> Send
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div-->
+      </div>
+		</section><!-- #content end -->
+	</div><!-- #wrapper end -->
+	<div class="chat-bar">
+		<!-- Primary Navigation
+		============================================= -->
+		<nav id="primary-menu" class="style-5 pull-left">
+			<ul class="norightborder norightpadding norightmargin">
+				<li>
+					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
+						<div class="fbox-icon pt-5">
+							<i class="icon-file-alt pt-10"></i>Menu
+						</div>
+					</a>
+				</li>
+				<li>
+					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
+						<div class="fbox-icon pt-5">
+							<i class="icon-comments-alt pt-10"></i>Staff
+						</div>
+					</a>
+				</li>
+				<li>
+					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
+						<div class="fbox-icon pt-5">
+							<i class="icon-picture pt-10"></i>Gallery
+						</div>
+					</a>
+				</li>
+				<li>
+					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
+						<div class="fbox-icon pt-5">
+							<i class="icon-star3 pt-10"></i>Reviews
+						</div>
+					</a>
+				</li>
+			</ul>
+		</nav><!-- #primary-menu end -->
+		<!--ul class="norightborder norightpadding norightmargin">
+			<li class="current">
+				<div class="feature-box fbox-rounded fbox-effect">
+					<div class="fbox-icon" style="padding: 0px;">
+						<a><i class="icon-comments-alt"></i></a>
+					</div>
+				</div>
+			</li>
+			<li>
+				<div class="feature-box fbox-rounded fbox-effect fbox-light">
+					<div class="fbox-icon" style="padding: 5px;">
+						<a href="#"><i class="icon-hand-up i-alt"></i></a>
+					</div>
+				</div>
+			</li>
+		</ul-->
+	</div>
+
+	<!-- Go To Top
+	============================================= -->
+	<div id="gotoTop" class="icon-angle-up"></div>
+
+  <%- include('modules/script') -%>
+  <script>
+    $(function(){
+			/*
+      var socket = io.connect('<%= host %>/lobby');
+
+      socket.emit('join_room', '<%= room_id %>');
+			*/
+    });
+  </script>
+</body>
+</html>

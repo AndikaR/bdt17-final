@@ -27,6 +27,7 @@ app.set('view engine', 'ejs');
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/slide', express.static(path.join(__dirname, 'storage/slides')));
+app.use('/room',  express.static(path.join(__dirname, '/public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(validator({
   customValidators: {
@@ -42,7 +43,13 @@ app.use(validator({
  }
 }));
 app.use(cookie());
-app.use(session({ secret: 'randomfacts', resave: false, saveUninitialized: false }));
+app.use(session({ 
+  secret: 'randomfacts',
+  cookie: { maxAge: 600000 },
+  rolling: true,
+  resave: true, 
+  saveUninitialized: true
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
@@ -76,6 +83,9 @@ memberModel.findOne({ 'username': 'admin' }, 'username password', function (err,
 
 var port = process.env.PORT || 8080;
 server.listen(port);
+
+var online_client = [];
+var room_list     = [];
 
 var online  = 0;
 var current = '#';
@@ -126,9 +136,51 @@ function CustomException(message) {
   this.message = message;
   this.name = 'CustomException';
 }
+
 //---------------end of functions---------------
 var admin_io  = io.of('/admin');
 var client_io = io.of('/client');
+var lobby_io  = io.of('/lobby');
+
+lobby_io.on('connection', function(socket){
+  socket.key = socket.conn.remoteAddress;
+  online_client[socket.key] = socket;
+
+  socket.on('req_available_room', function(){
+    var list = [];
+
+    function checkList() {
+      if (list.length === room_list.length) handleSuccess();
+    }
+
+    function handleSuccess() {
+      lobby_io.emit('res_available_room', list.join(''));
+    }
+
+    for (room of room_list) {
+      var html = ejs.renderFile(__dirname + '/views/lobby/room-list.ejs', room, function(err, str){
+        list.push(str);
+        checkList();
+      }); 
+    }
+  });
+
+  socket.on('join_room', function(room){
+    socket.join(room);
+  });
+
+  socket.on('create_room', function(data){
+    if (!room_list.hasOwnProperty(data.id)) {
+      room_list.push({ id: data.id, name: data.name });
+      
+      lobby_io.emit('room_created', data.id);
+    } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
+  });
+
+  socket.on('disconnect', function(data){
+    delete online_client[socket.key];
+  });
+});
 
 admin_io.on('connection', function(socket){
   socket.on('mouse_position', function(data) {
@@ -144,8 +196,17 @@ admin_io.on('connection', function(socket){
 });
 
 client_io.on('connection', function(socket){
+  socket.key = socket.conn.remoteAddress;
+  online_client[socket.key] = socket;
+  /*
+  client_io.clients((error, clients) => {
+    if (error) throw error;
+    console.log(clients); // => [PZDoMHjiu8PYfRiKAAAF, Anw2LatarvGVVXEIAAAD]
+  });
+  */
+
   ++online;
-  client_io.emit('online_counter', online);
+  client_io.emit('online_counter', Object.keys(online_client).length);
   update_slide(client_io);
 
   socket.on('illegal_hash', function(){    
@@ -153,9 +214,11 @@ client_io.on('connection', function(socket){
   });
 
   socket.on('disconnect', function(data){
+    delete online_client[socket.key];
+
     --online;
-    if (online > 1)
-      client_io.emit('online_counter', online);
+    if (Object.keys(online_client).length > 1)
+      client_io.emit('online_counter', Object.keys(online_client).length);
     else {
       current = '#';
       client_io.emit('force_hash', current);
@@ -231,8 +294,31 @@ app.post('/admin/file-upload', loggedIn, function(req, res){
 
 app.get('/', function(req, res){
   var host = getHost(req);
-  var root = path.join(__dirname, 'views');
   res.render('index', { hash: current, host: host });
+});
+
+app.get('/room/:room_id', loggedIn, function(req, res){
+  var host    = getHost(req);
+  var room_id = req.params.room_id;
+  var found   = false;
+
+  for (var i = 0; i < room_list.length; i++) {
+    if (room_list[i].id == room_id) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    return res.redirect('/lobby');
+  } else {
+    res.render('room', { host: host, user: req.user, room_id: room_id });
+  }
+});
+
+app.get('/lobby', loggedIn, function(req, res){
+  var host = getHost(req);
+  res.render('lobby/index', { host: host, user: req.user });
 });
 
 app.get('/slide/:img', function(req, res){
@@ -264,7 +350,7 @@ app.post('/login', function(req, res, next) {
       req.logIn(user, function(err) {
         if (err) { return next(err); }
         
-        return res.redirect(301, '/admin');
+        return res.redirect(301, '/lobby');
       });
     }
   })(req, res, next);

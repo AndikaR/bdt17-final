@@ -20,7 +20,11 @@
       <nav id="primary-menu">
 
         <ul>
-          <li><a href="/gateway"><div>Login / Register</div></a></li>
+          <% if (typeof user != 'undefined') { %>
+            <li><a href="/logout"><div>Logout</div></a></li>
+          <% } else { %>
+            <li><a href="/gateway"><div>Login / Register</div></a></li>
+          <% } %>
         </ul>
 
       </nav><!-- #primary-menu end -->
