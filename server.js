@@ -85,7 +85,7 @@ var port = process.env.PORT || 8080;
 server.listen(port);
 
 var online_client = [];
-var room_list     = [];
+var room_list     = {};
 
 var online  = 0;
 var current = '#';
@@ -150,28 +150,39 @@ lobby_io.on('connection', function(socket){
     var list = [];
 
     function checkList() {
-      if (list.length === room_list.length) handleSuccess();
+      if (list.length === Object.keys(room_list).length)
+        lobby_io.emit('res_available_room', list.join(''));
     }
 
-    function handleSuccess() {
-      lobby_io.emit('res_available_room', list.join(''));
-    }
+    for (var room in room_list) {
+      let data  = room_list[room];
+      data.id   = room;
 
-    for (room of room_list) {
-      var html = ejs.renderFile(__dirname + '/views/lobby/room-list.ejs', room, function(err, str){
+      ejs.renderFile(__dirname + '/views/lobby/room-list.ejs', data, function(err, str){
         list.push(str);
         checkList();
       }); 
     }
   });
 
-  socket.on('join_room', function(room){
-    socket.join(room);
+  socket.on('join_room', function(data){
+    socket.join(data.room);
+
+    if (room_list[data.room].admin.id == data.id) {
+      ejs.renderFile(
+        __dirname + '/views/room/admin-panel.ejs',
+        function(err, str){
+          socket.emit('access_granted', str);
+      });
+    }
   });
 
   socket.on('create_room', function(data){
     if (!room_list.hasOwnProperty(data.id)) {
-      room_list.push({ id: data.id, name: data.name });
+      room_list[data.id] = { 
+        name: data.name,
+        admin: data.admin 
+      };
       
       lobby_io.emit('room_created', data.id);
     } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
@@ -180,8 +191,13 @@ lobby_io.on('connection', function(socket){
   socket.on('disconnect', function(data){
     delete online_client[socket.key];
   });
+
+  socket.on('chat_message', function(data){
+    lobby_io.in(data.room).emit('chat_message', data.message); 
+  });
 });
 
+/*
 admin_io.on('connection', function(socket){
   socket.on('mouse_position', function(data) {
     client_io.emit('mouse_position_update', data);
@@ -198,12 +214,6 @@ admin_io.on('connection', function(socket){
 client_io.on('connection', function(socket){
   socket.key = socket.conn.remoteAddress;
   online_client[socket.key] = socket;
-  /*
-  client_io.clients((error, clients) => {
-    if (error) throw error;
-    console.log(clients); // => [PZDoMHjiu8PYfRiKAAAF, Anw2LatarvGVVXEIAAAD]
-  });
-  */
 
   ++online;
   client_io.emit('online_counter', Object.keys(online_client).length);
@@ -225,7 +235,10 @@ client_io.on('connection', function(socket){
     }
   });
 
-  socket.on('chat_message', function(msg){ client_io.emit('chat_message', msg); });
+  socket.on('chat_message', function(data){
+    client_io.emit('chat_message', data.message); 
+  });
+
   socket.on('change_username', function(msg){ client_io.emit('change_username', msg); });
 
   socket.on('change_current', function(data){
@@ -235,6 +248,7 @@ client_io.on('connection', function(socket){
     }
   });
 });
+*/
 
 console.log('Your presentation is running on http://localhost:' + port);
 
@@ -298,12 +312,13 @@ app.get('/', function(req, res){
 });
 
 app.get('/room/:room_id', loggedIn, function(req, res){
-  var host    = getHost(req);
-  var room_id = req.params.room_id;
-  var found   = false;
+  var host     = getHost(req);
+  var room_id  = req.params.room_id;
+  var found    = false;
+  var user     = req.user;
 
-  for (var i = 0; i < room_list.length; i++) {
-    if (room_list[i].id == room_id) {
+  for (var room in room_list) {
+    if (room == room_id) {
       found = true;
       break;
     }
@@ -312,7 +327,11 @@ app.get('/room/:room_id', loggedIn, function(req, res){
   if (!found) {
     return res.redirect('/lobby');
   } else {
-    res.render('room', { host: host, user: req.user, room_id: room_id });
+    res.render('room', { 
+      host: host, 
+      user: user, 
+      room_id: room_id
+    });
   }
 });
 
@@ -426,7 +445,13 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(user, done) {
   memberModel.findById(user, function(err, user) {
-    done(err, user);
+    var data = {};
+
+    data.id    = user.id;
+    data.name  = user.username;
+    data.email = user.email;
+
+    done(err, data);
   });
 });
 

@@ -8,12 +8,19 @@
 	<link rel="stylesheet" href="assets/revealjs/css/reveal.css" />
 	<link rel="stylesheet" href="assets/revealjs/css/theme/black.css" id="theme" />
 	<link rel="stylesheet" href="assets/css/fontawesome.css" -->
+
+	<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"/>
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+	<link rel="stylesheet" href="assets/revealjs/css/reveal.css" />
+	<link rel="stylesheet" href="assets/revealjs/css/theme/black.css" id="theme" />
 	
 	<style>
 		/*
 		* { margin: 0; padding: 0; box-sizing: border-box; }
 		body { font: 13px Helvetica, Arial; }
+		
 		form { background:rgba(0,0,0,0.0); padding: 0px; position: fixed; bottom: 0; width: 100%; }
+		*/
 		#messages { 
 			background:rgba(0,0,0,0.5); 
 			padding: 5px; 
@@ -37,7 +44,6 @@
 			height:         calc(100% - 35px);
 		}
 		.no-slide { background-image: url('http://via.placeholder.com/1280x800'); width: 100%; height: 100%; }
-		*/
 		.pr-45 { padding-right: 45px !important; }
 		.pl-45 { padding-left: 45px !important; }
 		.pt-5 { padding-top: 5px !important; }
@@ -70,97 +76,43 @@
 		<!-- Content
 		============================================= -->
 		<section id="content">
-      <div class="container clearfix">
-				<!--div class="reveal">
+      <div class="container clearfix canvas-container">
+				<div class="reveal">
 					<div class="slides"></div>
 				</div>
-				<div class="chat-list">
-					<ul id="messages" class="resize vertical"></ul>
-				</div>
-				<div class="chat-input">
-					<form action="">
-						<div class="">
-							<div class="form-group">
-								<div class="input-group">
-									<span class="input-group-btn">
-										<button class="btn btn-primary" type="button" id="toggle_chat"><i class="fa fa-comments" aria-hidden="true"></i></button>
-									</span>
-									<span class="input-group-btn">
-										<button class="btn btn-primary" type="button" disabled>
-											<i class="fa fa-users" aria-hidden="true">
-												<span id="online">0</span>
-											</i>
-										</button>
-									</span>
-									<span class="input-group-btn" style="width: 20%;">
-										<input type="text" class="form-control" autocomplete="off" id="username" placeholder="Name"/>
-									</span>
-									<input type="text" class="form-control" id="m" autocomplete="off" placeholder="Message"/>
-									<input type="hidden" id="host" value="<%= host %>" />
-									<div class="input-group-btn">
-										<button class="btn btn-primary" id="sm">
-											<i class="fa fa-paper-plane"></i> Send
-										</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</form>
-				</div-->
       </div>
 		</section><!-- #content end -->
 	</div><!-- #wrapper end -->
+	<div class="chat-list">
+		<ul class="resize vertical" id="messages"></ul>
+	</div>
+	<div class="ctrl-panel" style="display: none;"></div>
+	<input type="hidden" id="user" value="<%= user %>">
+	<input type="hidden" id="host" value="<%= host %>">
+	<input type="hidden" name="room_number" value="<%= room_id %>">
 	<div class="chat-bar">
 		<!-- Primary Navigation
 		============================================= -->
 		<nav id="primary-menu" class="style-5 pull-left">
-			<ul class="norightborder norightpadding norightmargin">
+			<ul class="norightborder norightpadding norightmargin chat-ul">
 				<li>
-					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
+					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45" id="toggle_chat">
 						<div class="fbox-icon pt-5">
-							<i class="icon-file-alt pt-10"></i>Menu
+							<i class="icon-comments-alt pt-10"></i>
 						</div>
 					</a>
 				</li>
 				<li>
-					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
+					<a class="feature-box fbox-rounded fbox-effect pr-45" id="toggle_none">
 						<div class="fbox-icon pt-5">
-							<i class="icon-comments-alt pt-10"></i>Staff
-						</div>
-					</a>
-				</li>
-				<li>
-					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
-						<div class="fbox-icon pt-5">
-							<i class="icon-picture pt-10"></i>Gallery
-						</div>
-					</a>
-				</li>
-				<li>
-					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45">
-						<div class="fbox-icon pt-5">
-							<i class="icon-star3 pt-10"></i>Reviews
+							<i class="icon-file-alt pt-10"></i>
 						</div>
 					</a>
 				</li>
 			</ul>
 		</nav><!-- #primary-menu end -->
-		<!--ul class="norightborder norightpadding norightmargin">
-			<li class="current">
-				<div class="feature-box fbox-rounded fbox-effect">
-					<div class="fbox-icon" style="padding: 0px;">
-						<a><i class="icon-comments-alt"></i></a>
-					</div>
-				</div>
-			</li>
-			<li>
-				<div class="feature-box fbox-rounded fbox-effect fbox-light">
-					<div class="fbox-icon" style="padding: 5px;">
-						<a href="#"><i class="icon-hand-up i-alt"></i></a>
-					</div>
-				</div>
-			</li>
-		</ul-->
+		<input type="text" id="m" style="height: 50px; font-size: 30px; padding-top: 3px; flex: 1;" placeholder="Type &amp; Hit Enter..">
+		<button class="button button-3d button-xlarge button-rounded button-teal pull-right" style="margin-top: 2px;" id="sm">Send</button>
 	</div>
 
 	<!-- Go To Top
@@ -168,14 +120,152 @@
 	<div id="gotoTop" class="icon-angle-up"></div>
 
   <%- include('modules/script') -%>
-  <script>
-    $(function(){
-			/*
-      var socket = io.connect('<%= host %>/lobby');
 
-      socket.emit('join_room', '<%= room_id %>');
+	<!-- Bootstrap library -->
+	<script src="assets/js/bootstrap.js"></script>
+
+	<!-- jQuery UI -->
+	<script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+
+	<!-- Reveal.js is for presentations -->
+	<script src="assets/revealjs/lib/js/head.min.js"></script>
+	<script src="assets/revealjs/js/reveal.js"></script>
+
+	<!-- Raphael library -->
+	<script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.js"></script>
+
+	<!-- Main JavaScript file -->
+	<script src="assets/js/script.js"></script>
+
+  <script>
+    $(function() {
+			// Initialize the Reveal.js library with the default config options
+			// See more here https://github.com/hakimel/reveal.js#configuration
+			var init_reveal = false;
+			var room = $('input[name=room_number]').val();
+			var user = $('#user').val();
+			var is_admin = $('#is_admin').val();
+
+			function initReveal() {
+				Reveal.initialize({ 
+					history: true, 
+					mouseWheel: false,
+					controls: false,
+					touch: false,
+					keyboard: false,
+					embedded: false,
+					progress: false,
+					autoSlide: 0
+				});
+			}
+			
+			var paper = new Raphael(
+				$('#canvas-container'), 
+				window.width, 
+				window.height
+			);
+			
+			var circle = paper.circle(0, 0, 10).attr({ fill: '#fff' });
+			var socket = io.connect($('#host').val() + '/lobby');
+
+			circle.hide();
+
+			$('ul.chat-ul li a#toggle_chat').click(function(e) {
+        e.preventDefault();
+				$('.chat-list').toggle();
+    	});
+
+			$('ul.chat-ul li a#toggle_none').click(function(e) {
+        e.preventDefault();
+    	});
+
+			function emitMessage() {
+				socket.emit('chat_message', { 
+					message: $('#m').val(),
+					room: room
+				});
+				$('#m').val('');
+			}
+
+			var key_map = {};
+			onkeydown = onkeyup = function(e){
+				e = e || event; // to deal with IE
+				key_map[e.keyCode] = e.type == 'keydown';
+				var isMsgFocus = (key_map[13] && $('#m').is(':focus')); //Enter key
+
+				if (key_map[16] && isMsgFocus) {
+					$('#m').val($('#m').val() + '\n');
+				} else if (isMsgFocus) {
+					emitMessage();
+				}
+			}
+
+			$('#sm').click(function(){
+				emitMessage();
+			});
+
+			socket.emit('join_room', { room: room, id: user.id });
+
+			socket.on('access_granted', function(panel){
+				$('.ctrl-panel').append(panel).show();
+			});
+
+			socket.on('chat_message', function(msg){
+				$('#messages').append($('<li>').html('<p class="white">' + msg + '</p>'));
+			});
+
+			/*
+			socket.on('update_slide', function(slides){ 
+				var $slides = $('.slides');
+
+				$slides.empty();
+
+				if (slides.list.length) {
+					for (var i = 0; i < slides.list.length; i++) {
+						$slides.append('<section data-background="/slide/' + slides.list[i] + '"></section>');
+					}
+				} else {
+					$slides.append('<section data-background="http://via.placeholder.com/1280x800"></section>');
+				}
+
+				socket.emit('illegal_hash');
+				initReveal();
+			});
+
+			socket.on('mouse_toggle_update', function(data){
+				if (data) circle.show();
+				else circle.hide();
+			});
+
+			socket.on('mouse_position_update', function(data){
+				circle.animate({
+					cx: data.mx * $(window).width(),
+					cy: data.my * $(window).height()
+				}, 1, 'linear');
+			});
+
+			socket.on('online_counter', function(val){
+				$('#online').text(val);
+			});
+
+			socket.on('change_username', function(msg){
+				$('#messages').append($('<li>').html('<p class="darkorange"><i>' + msg + '</i></p>'));
+			});
+
+			socket.on('force_hash', function(currentHash){
+				window.location.hash = currentHash;
+			});
+
+			$(window).on('hashchange', function(){
+				socket.emit('illegal_hash');
+			});
+			
+			socket.on('admin_response', function(eventName){ 
+				Reveal[eventName](); 
+				socket.emit('change_current', { hash: location.hash }); 
+			});
 			*/
-    });
+		});
   </script>
 </body>
 </html>

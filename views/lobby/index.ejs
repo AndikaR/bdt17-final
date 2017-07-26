@@ -48,6 +48,7 @@
         </div>
       </div>
 		</section><!-- #content end -->
+    <input type="hidden" id="user" value="<%= user %>">
 
 		<%- include('../modules/footer') -%>
 
@@ -61,29 +62,12 @@
   <script>
     $(function(){
       var socket = io.connect('<%= host %>/lobby');
+      var user   = $('#user').val();
 
       socket.emit('req_available_room');
 
       socket.on('res_available_room', function(rooms){
         $('#portfolio').append(rooms);
-         /*
-        for (room of rooms) {
-          console.log(room);
-
-          var html = new EJS({ url: '/templates/room-list'}).render(room);
-          
-        }
-       
-        //var list = EJS();
-        // Get your data
-        var additionalUsers = { users: [ { name: 'Bob' } ] };
-
-        // Moved and renamed the row.html to: /public/templates/row.ejs
-        var html = new EJS({ url: '/templates/row'}).render(additionalUsers);
-
-        // Append the rendered HTML
-        $('tbody').append(html);
-        */
       });
 
       socket.on('room_exists', function(msg){
@@ -100,7 +84,11 @@
         var room_id   = $('#room-id').val();
         var room_name = $('#room-name').val();
 
-        socket.emit('create_room', { id:room_id, name:room_name });
+        socket.emit('create_room', { 
+          id: room_id, 
+          name: room_name,
+          admin: user
+        });
       });
     });
   </script>
