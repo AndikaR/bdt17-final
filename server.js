@@ -195,6 +195,13 @@ lobby_io.on('connection', function(socket){
   socket.on('chat_message', function(data){
     lobby_io.in(data.room).emit('chat_message', data.message); 
   });
+
+  socket.on('admin_request', function(data){
+    switch(data.eventName) {
+      case 'mouse_toggle' : client_io.emit('mouse_toggle_update', data.content); break;
+      default : client_io.emit('admin_response', data.eventName); break; 
+    }
+  });
 });
 
 /*
@@ -266,10 +273,14 @@ app.get('/admin', function(req, res){
   res.render('admin', { host: host });
 });
 
-app.post('/admin/file-upload', loggedIn, function(req, res){
+app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
   var host = getHost(req);
   var form = formidable.IncomingForm();
+  var room_id = req.query.room_id;
 
+  res.send('wassafassafasf');
+
+  /*
   fse.ensureDir(dir, err => {
     if (err) req.flash('error', 'An error occured, please try again!');
 
@@ -304,6 +315,7 @@ app.post('/admin/file-upload', loggedIn, function(req, res){
   });
 
   res.redirect(301, '/admin');
+  */
 });
 
 app.get('/', function(req, res){

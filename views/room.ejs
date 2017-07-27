@@ -150,11 +150,6 @@
     $(function() {
 			// Initialize the Reveal.js library with the default config options
 			// See more here https://github.com/hakimel/reveal.js#configuration
-			var init_reveal = false;
-			var room = $('input[name=room_number]').val();
-			var user = $('#user').val();
-			var is_admin = $('#is_admin').val();
-
 			function initReveal() {
 				Reveal.initialize({ 
 					history: true, 
@@ -167,17 +162,53 @@
 					autoSlide: 0
 				});
 			}
-			
-			var paper = new Raphael(
-				$('#canvas-container'), 
-				window.width, 
-				window.height
-			);
-			
-			var circle = paper.circle(0, 0, 10).attr({ fill: '#fff' });
+
+			var init_reveal = false;
+			var room = $('input[name=room_number]').val();
+			var user = $('#user').val();
+
+			//Admin state
+			var mouse_state = false;
+
+			var prevMouseX, prevMouseY, currMouseX, currMouseY     = 0;
+      var prevScreenX, prevScreenY, currScreenX, currScreenY = 0; 
+			//End of Admin state
+
 			var socket = io.connect($('#host').val() + '/lobby');
 
-			circle.hide();
+			// Admin and User
+			socket.emit('join_room', { room: room, id: user.id });
+
+			socket.on('access_granted', function(panel){
+				$('.ctrl-panel').append(panel).show();
+				admin();
+			});
+
+			socket.on('revoke_admin', function(action){
+				
+			});
+
+			socket.on('admin_response', function(eventName){ 
+				Reveal[eventName](); 
+				socket.emit('change_current', { hash: location.hash }); 
+			});
+
+			socket.on('update_slide', function(slides){ 
+				var $slides = $('.slides');
+
+				$slides.empty();
+
+				if (slides.list.length) {
+					for (var i = 0; i < slides.list.length; i++) {
+						$slides.append('<section data-background="/slide/' + slides.list[i] + '"></section>');
+					}
+				} else {
+					$slides.append('<section data-background="http://via.placeholder.com/1280x800"></section>');
+				}
+
+				socket.emit('illegal_hash');
+				initReveal();
+			});
 
 			$('ul.chat-ul li a#toggle_chat').click(function(e) {
         e.preventDefault();
@@ -213,67 +244,130 @@
 				emitMessage();
 			});
 
-			socket.emit('join_room', { room: room, id: user.id });
-
-			socket.on('access_granted', function(panel){
-				$('.ctrl-panel').append(panel).show();
-			});
-
 			socket.on('chat_message', function(msg){
 				$('#messages').append($('<li>').html('<p class="white">' + msg + '</p>'));
 			});
 
-			/*
-			socket.on('update_slide', function(slides){ 
-				var $slides = $('.slides');
+			var user = function() {
+				var paper = new Raphael(
+					$('#canvas-container'), 
+					window.width, 
+					window.height
+				);
+				
+				var circle = paper.circle(0, 0, 10).attr({ fill: '#fff' });
 
-				$slides.empty();
+				circle.hide();
 
-				if (slides.list.length) {
-					for (var i = 0; i < slides.list.length; i++) {
-						$slides.append('<section data-background="/slide/' + slides.list[i] + '"></section>');
-					}
-				} else {
-					$slides.append('<section data-background="http://via.placeholder.com/1280x800"></section>');
-				}
+				socket.on('mouse_toggle_update', function(data){
+					if (data) circle.show();
+					else circle.hide();
+				});
 
-				socket.emit('illegal_hash');
-				initReveal();
-			});
+				socket.on('mouse_position_update', function(data){
+					circle.animate({
+						cx: data.mx * $(window).width(),
+						cy: data.my * $(window).height()
+					}, 1, 'linear');
+				});
 
-			socket.on('mouse_toggle_update', function(data){
-				if (data) circle.show();
-				else circle.hide();
-			});
+				socket.on('online_counter', function(val){
+					$('#online').text(val);
+				});
 
-			socket.on('mouse_position_update', function(data){
-				circle.animate({
-					cx: data.mx * $(window).width(),
-					cy: data.my * $(window).height()
-				}, 1, 'linear');
-			});
+				socket.on('force_hash', function(currentHash){
+					window.location.hash = currentHash;
+				});
 
-			socket.on('online_counter', function(val){
-				$('#online').text(val);
-			});
+				$(window).on('hashchange', function(){
+					socket.emit('illegal_hash');
+				});
+			};
 
-			socket.on('change_username', function(msg){
-				$('#messages').append($('<li>').html('<p class="darkorange"><i>' + msg + '</i></p>'));
-			});
+			var admin = function() {
+				window.setInterval(function(){
+          if (mouse_state) {
+            $("body").mousemove(function(e) {
+              currMouseX = e.pageX;
+              currMouseY = e.pageY;
+              currScreenX = e.screenX;
+              currScreenY = e.screenY;
+            });
 
-			socket.on('force_hash', function(currentHash){
-				window.location.hash = currentHash;
-			});
+            if (prevMouseX !== currMouseX || prevMouseY !== currMouseY) {
+              var newX = (prevMouseX * currScreenX) / prevScreenX;
+		          var newY = (prevMouseY * currScreenY) / prevScreenY;
 
-			$(window).on('hashchange', function(){
-				socket.emit('illegal_hash');
-			});
-			
-			socket.on('admin_response', function(eventName){ 
-				Reveal[eventName](); 
-				socket.emit('change_current', { hash: location.hash }); 
-			});
-			*/
+              prevMouseX = currMouseX;
+              prevMouseY = currMouseY;
+
+              prevScreenX = currScreenX;
+              prevScreenY = currScreenY;
+
+              socket.emit('mouse_position', { 
+                mx: (newX / $(window).width()), 
+                my: (newY / $(window).height())
+              });
+            }
+          }
+        }, 100);
+
+        function toggle_mouse() {
+          $icon = $('.mouse-toggle').find('.mouse');
+
+          if (!mouse_state) $icon.css('color', 'green');
+          else $icon.css('color', 'red');
+
+          mouse_state = !mouse_state;
+          socket.emit('admin_request', { eventName: 'mouse_toggle', content: mouse_state });
+        };
+
+        $(document).keydown(function(event){
+          if (event.which == "17") toggle_mouse(); //ctrl key
+        });
+
+        $('.mouse-toggle').on('click', function(){
+          toggle_mouse();
+        });
+
+				$('.ctrl-panel').on('click', '#upload-file', function(){
+					$('#pdf-file').trigger('click');
+				});
+
+				$('.ctrl-panel').on('click', '#pdf-upload', function(){
+					var formData = new FormData($('form#pdf-upload-form').get(0));
+					
+					$.ajax({
+						url: '/admin/file-upload/' + room,
+						data: formData,
+						processData: false,
+						contentType: false,
+						type: 'POST',
+						success : function(data) {
+							console.log(data);
+						}
+						,error:function(a, b, c) {
+							console.log(a);
+							console.log(b);
+							console.log(c);
+						}
+					}).done(function(data) {
+						//On done
+					});
+				});
+
+				$('.ctrl-panel').on('change', '#pdf-file', function(){
+					var fname = ($(this).val() != '') ? $(this).val().split('\\').pop().split('/').pop() : null;
+
+					$('#pdf-name').val(fname);
+				});
+
+				$('.ctrl-panel').on('click', '.navigate', function() {
+					var id = $(this).attr('id') // or this.id
+					
+					socket.emit('admin_request', { eventName: id });
+				});
+			}
 		});
   </script>
 </body>
