@@ -16,6 +16,7 @@ var mime       = require('mime');
 var passport   = require('passport');
 var bodyParser = require('body-parser');
 var bcrypt     = require('bcrypt');
+var dateTime   = require('node-datetime');
 
 var mongoose      = require('bluebird').promisifyAll(require('mongoose'));
 var LocalStrategy = require('passport-local').Strategy;
@@ -301,15 +302,21 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
     form.on('file', function(name, file) {
       rmDir(room_dir);
 
-      pdf2image.convertPDF(file.path,{
-        density : 200,
-        quality : 100,
-        outputFormat : room_dir + '/%d',
-        outputType : 'jpg'
-      }).then(function(pageList) {
-        update_slide(lobby_io, room_dir, room_id);
-        current = '#';
-        res.send({ success: 'Completed' });
+      var dt        = dateTime.create();
+      var curr_date = dt.format('Y_m_d');
+      var fname     = room_dir + '/' + curr_date;
+
+      fse.rename(file.path, fname, function(){
+        pdf2image.convertPDF(fname,{
+          density : 200,
+          quality : 100,
+          outputFormat : room_dir + '/%d',
+          outputType : 'jpg'
+        }).then(function(pageList) {
+          update_slide(lobby_io, room_dir, room_id);
+          current = '#';
+          res.send({ success: 'Completed' });
+        });
       });
     });
   }
