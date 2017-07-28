@@ -367,6 +367,12 @@
 					
 					socket.emit('admin_request', { eventName: id });
 				});
+
+				$('.ctrl-panel').on('click', '.toggle-panel', function() {
+					$('.sub-ctrl-panel').toggle();
+
+					//$(this).show(); // or this.id
+				});
 			}
 		});
   </script>

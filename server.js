@@ -92,17 +92,17 @@ var current = '#';
 var dir     = path.join(__dirname, '/storage');
 
 //---------------functions---------------
-function update_slide(socket) {
-  fse.readdir(dir + '/slides', (err, list) => {
+function update_slide(socket, room_dir, room_id) {
+  fse.readdir(room_dir, (err, list) => {
     if (err) console.log(err);
     data = { list: [], mtime: [] };
 
     for (content of list) {
       data.list.push(content);
-      data.mtime.push(fse.statSync(dir + '/slides/' + content).mtime.getTime());
+      data.mtime.push(fse.statSync(room_dir + '/' + content).mtime.getTime());
     }
 
-    socket.emit('update_slide', data);
+    socket.in(room_id).emit('update_slide', data);
   });
 }
 
@@ -183,6 +183,8 @@ lobby_io.on('connection', function(socket){
         name: data.name,
         admin: data.admin 
       };
+
+      rmDir(dir + '/' + data.id); //clear directory before used
       
       lobby_io.emit('room_created', data.id);
     } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
@@ -276,46 +278,41 @@ app.get('/admin', function(req, res){
 app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
   var host = getHost(req);
   var form = formidable.IncomingForm();
-  var room_id = req.query.room_id;
+  var room_id  = req.params.room_id;
+  var room_dir = dir + '/' + room_id;
 
-  res.send('wassafassafasf');
-
-  /*
   fse.ensureDir(dir, err => {
-    if (err) req.flash('error', 'An error occured, please try again!');
+    if (err) res.send({ error: 'An error occured, please try again!' });
 
-    fse.ensureDir(dir + '/slides', err => {
-      if (err) req.flash('error', 'An error occured, please try again!');
+    fse.ensureDir(room_dir, err => {
+      if (err) res.send({ error: 'An error occured, please try again!' });
+      nextProcess();
     });
   });
 
-  form.uploadDir = dir;
-  form.keepExtensions = true;
+  function nextProcess() {
+    form.uploadDir = dir;
+    form.keepExtensions = true;
 
-  form.parse(req, function(err, fields, files) {
-    if (err) req.flash('error', 'An error occured, please try again!');
-  });
-
-  form.on('file', function(name, file) {
-    rmDir(dir + '/slides');
-
-    pdf2image.convertPDF(file.path,{
-      density : 200,
-      quality : 100,
-      outputFormat : '%p/slides/%d',
-      outputType : 'jpg'
-    }).then(function(pageList) {
-      update_slide(io.sockets);
-      current = '#';
+    form.parse(req, function(err, fields, files) {
+      if (err) res.send({ error: 'An error occured, please try again!' });
     });
-  });
 
-  form.on('end', function(){
-    req.flash('success', 'Completed');
-  });
+    form.on('file', function(name, file) {
+      rmDir(room_dir);
 
-  res.redirect(301, '/admin');
-  */
+      pdf2image.convertPDF(file.path,{
+        density : 200,
+        quality : 100,
+        outputFormat : room_dir + '/%d',
+        outputType : 'jpg'
+      }).then(function(pageList) {
+        update_slide(lobby_io, room_dir, room_id);
+        current = '#';
+        res.send({ success: 'Completed' });
+      });
+    });
+  }
 });
 
 app.get('/', function(req, res){

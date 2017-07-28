@@ -1,5 +1,5 @@
 <section>
-  <div class="row" style="width: 192px; height: 192px;">
+  <div class="row sub-ctrl-panel" style="width: 192px; height: 192px;">
     <div class="input-group" style="margin-left: 15px; width: 192px; margin-right: 0px;">
       <input class="form-control" type="text" id="pdf-name" placeholder="PDF Name" disabled />
       <span class="input-group-btn">
@@ -56,11 +56,16 @@
         <% } else if (i == 8) { %>
           <div class="feature-box fbox-rounded fbox-effect">
             <div class="fbox-icon">
-              <a href="#"><i class="icon-minus-sign i-alt"></i></a>
+              <a href="#" class="toggle-panel"><i class="icon-minus-sign i-alt"></i></a>
             </div>
           </div>
         <% } %>
       </div>
     <% } %>
+  </div>
+  <div class="feature-box fbox-rounded fbox-effect sub-ctrl-panel" style="display: none; margin-top: -128px; margin-left: 64px;">
+    <div class="fbox-icon">
+      <a href="#" class="toggle-panel"><i class="icon-plus-sign i-alt"></i></a>
+    </div>
   </div>
 </section>
