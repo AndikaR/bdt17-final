@@ -73,13 +73,6 @@ var memberModel = conn.model('members');
 
 conn.on('error', function (err) { console.log('Database not connected: ' + err); });
 conn.once('open', function (callback) { console.log('Database connected!'); });
-
-/*
-memberModel.findOne({ 'username': 'admin' }, 'username password', function (err, user) {
-  if (err) return handleError(err);
-  console.log('%s %s', user.username, user.password);
-});
-*/
 //---------------end of mongoose---------------
 
 var port = process.env.PORT || 8080;

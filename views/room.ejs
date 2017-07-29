@@ -11,16 +11,24 @@
 
 	<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"/>
 	<link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
-	<link rel="stylesheet" href="assets/revealjs/css/reveal.css" />
-	<link rel="stylesheet" href="assets/revealjs/css/theme/black.css" id="theme" />
 	
+	<!--
+		<link rel="stylesheet" href="assets/revealjs/css/reveal.css" />
+		<link rel="stylesheet" href="assets/revealjs/css/theme/black.css" id="theme" />
+  -->
+		<link rel="stylesheet" media="screen" href="deck/core/deck.core.css">
+
+		<link rel="stylesheet" media="screen" href="deck/extensions/goto/deck.goto.css">
+		<link rel="stylesheet" media="screen" href="deck/extensions/menu/deck.menu.css">
+		<link rel="stylesheet" media="screen" href="deck/extensions/navigation/deck.navigation.css">
+		<link rel="stylesheet" media="screen" href="deck/extensions/status/deck.status.css">
+		<link rel="stylesheet" media="screen" href="deck/extensions/scale/deck.scale.css">
+
+		<link rel="stylesheet" media="screen" href="deck/themes/style/web-2.0.css">
+
+		<link rel="stylesheet" media="screen" href="deck/themes/transition/horizontal-slide.css">
+		<script src="deck/modernizr.custom.js"></script>
 	<style>
-		/*
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-		body { font: 13px Helvetica, Arial; }
-		
-		form { background:rgba(0,0,0,0.0); padding: 0px; position: fixed; bottom: 0; width: 100%; }
-		*/
 		.ctrl-panel {
 			padding: 5px;
 			position: fixed;
@@ -82,15 +90,18 @@
 
     <%- include('modules/header-lobby') -%>
 
-		<!-- Content
-		============================================= -->
-		<section id="content">
-      <div class="container clearfix canvas-container">
-				<div class="reveal">
-					<div class="slides"></div>
-				</div>
-      </div>
-		</section><!-- #content end -->
+		<div class="deck-container">
+			<!-- Begin slides. Just make elements with a class of slide. -->
+			<section class="slide">
+				<h1>Slide</h1>
+			</section>
+			<section class="slide">
+				<h1>Content</h1>
+			</section>
+			<section class="slide">
+				<h1>Here</h1>
+			</section>
+		</div>
 	</div><!-- #wrapper end -->
 	<div class="chat-list">
 		<ul class="resize vertical" id="messages"></ul>
@@ -133,12 +144,21 @@
 	<!-- Bootstrap library -->
 	<script src="assets/js/bootstrap.js"></script>
 
+	<script src="deck/core/deck.core.js"></script>
+
+	<!-- Extension JS files. Add or remove as needed. -->
+	<script src="deck/extensions/menu/deck.menu.js"></script>
+	<script src="deck/extensions/goto/deck.goto.js"></script>
+	<script src="deck/extensions/status/deck.status.js"></script>
+	<script src="deck/extensions/navigation/deck.navigation.js"></script>
+	<script src="deck/extensions/scale/deck.scale.js"></script>
+
 	<!-- jQuery UI -->
 	<script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
 	<!-- Reveal.js is for presentations -->
-	<script src="assets/revealjs/lib/js/head.min.js"></script>
-	<script src="assets/revealjs/js/reveal.js"></script>
+	<!--script src="assets/revealjs/lib/js/head.min.js"></script>
+	<script src="assets/revealjs/js/reveal.js"></script-->
 
 	<!-- Raphael library -->
 	<script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.js"></script>
@@ -150,6 +170,7 @@
     $(function() {
 			// Initialize the Reveal.js library with the default config options
 			// See more here https://github.com/hakimel/reveal.js#configuration
+			/*
 			function initReveal() {
 				Reveal.initialize({ 
 					history: true, 
@@ -162,8 +183,12 @@
 					autoSlide: 0
 				});
 			}
+			*/
+			$.deck('.slide');
 
-			var init_reveal = false;
+			var $container = $('.deck-container');
+			$container.width('100%').height($(window).height() - 129);
+
 			var room = $('input[name=room_number]').val();
 			var user = $('#user').val();
 
@@ -193,7 +218,7 @@
 				socket.emit('change_current', { hash: location.hash }); 
 			});
 
-			socket.on('update_slide', function(slides){ 
+			socket.on('update_slide', function(slides){
 				var $slides = $('.slides');
 
 				$slides.empty();
@@ -370,8 +395,6 @@
 
 				$('.ctrl-panel').on('click', '.toggle-panel', function() {
 					$('.sub-ctrl-panel').toggle();
-
-					//$(this).show(); // or this.id
 				});
 			}
 		});
