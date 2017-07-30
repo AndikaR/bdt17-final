@@ -17,6 +17,7 @@ var passport   = require('passport');
 var bodyParser = require('body-parser');
 var bcrypt     = require('bcrypt');
 var dateTime   = require('node-datetime');
+var jdenticon  = require('jdenticon');
 
 var mongoose      = require('bluebird').promisifyAll(require('mongoose'));
 var LocalStrategy = require('passport-local').Strategy;
@@ -199,9 +200,13 @@ lobby_io.on('connection', function(socket){
 
   socket.on('create_room', function(data){
     if (!room_list.hasOwnProperty(data.id)) {
+      var identicon  = jdenticon.toPng(data.id, 300);
+      var admin_data = JSON.parse(data.admin);
+
       room_list[data.id] = { 
         name: data.name,
-        admin: data.admin 
+        admin: admin_data,
+        identicon: identicon.toString('base64')
       };
 
       var room_dir = dir + '/' + data.id;
@@ -327,7 +332,7 @@ app.get('/room/:room_id', loggedIn, function(req, res){
   } else {
     res.render('room', { 
       host: host, 
-      user: user, 
+      user: JSON.stringify(user), 
       room_id: room_id
     });
   }
@@ -335,7 +340,8 @@ app.get('/room/:room_id', loggedIn, function(req, res){
 
 app.get('/lobby', loggedIn, function(req, res){
   var host = getHost(req);
-  res.render('lobby/index', { host: host, user: req.user });
+
+  res.render('lobby/index', { host: host, user: JSON.stringify(req.user) });
 });
 
 app.get('/slide/:room_id/:img', function(req, res){

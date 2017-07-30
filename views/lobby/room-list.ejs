@@ -1,15 +1,14 @@
 <article class="portfolio-item pf-media pf-others">
   <div class="portfolio-image">
     <a href="/room/<%= id %>">
-      <img src="" alt="Open Imagination">
+      <img src="data:image/png;base64,<%= identicon %>">
     </a>
     <div class="portfolio-overlay">
-      <a href="" class="left-icon" data-lightbox="image"><i class="icon-line-plus"></i></a>
-      <a href="/room/<%= id %>" class="right-icon"><i class="icon-line-ellipsis"></i></a>
+      <a href="/room/<%= id %>" class="center-icon"><i class="icon-line-ellipsis"></i></a>
     </div>
   </div>
   <div class="portfolio-desc">
-    <h3><a href="/room/<%= id %>"><%= name %></a></h3>
-    <span><a href="#"><%= id %></a>, <a href="#"><%= id %></a></span>
+    <h3><a href="/room/<%= id %>"><%= '#' + id + ' ' + name %></a></h3>
+    <span><b><i class="icon-user"></i> <%= admin.name %></b></span>
   </div>
 </article>

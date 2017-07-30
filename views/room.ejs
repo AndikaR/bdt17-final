@@ -221,7 +221,7 @@
 			$container.width('100%').height($(window).height() - 129);
 
 			var room = $('input[name=room_number]').val();
-			var user = $('#user').val();
+			var user = JSON.parse($('#user').val());
 
 			//Admin state
 			var mouse_state = false;
