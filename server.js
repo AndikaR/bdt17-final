@@ -414,7 +414,7 @@ app.post('/register', function(req, res) {
         });
 
         newMember.saveAsync();
-        res.redirect('/admin');
+        res.redirect('/lobby');
       }).catch(function(e){
         handler(e.message);
       });
@@ -432,6 +432,62 @@ app.post('/register', function(req, res) {
 
 app.get('/forgot-password', function(req, res) {
   res.render('auth/forgot-password');
+});
+
+app.get('/delete-account', function(req, res) {
+  res.render('auth/delete-account');
+});
+
+app.post('/delete-account', function(req, res) {
+  req.assert('email', 'required').notEmpty();
+  req.assert('email', 'valid email required').isEmail();
+  req.assert('password', 'required').notEmpty();
+
+  req.getValidationResult().then(function(vr) {
+    var handler = function(errors) {
+      req.flash('old', {
+        'email' : req.body.email
+      });
+
+      for (var error of errors) req.flash('error', error);
+
+      res.redirect(301, '/delete-account');
+    };
+
+    try {
+      if (!vr.isEmpty()) throw vr.array();
+
+      memberModel
+      .findAsync({ 'email': req.body.email })
+      .then(function(member){
+        if (!member.length) throw new CustomException(['Member does not exist!']);
+
+        bcrypt.compare(req.body.password, member[0].password, function(err, pass) {
+          if(!pass || err) {
+            req.flash('error', 'Password does not match!');
+            res.redirect('/delete-account');
+          } else {
+            memberModel.remove({
+              'email' : req.body.email
+            }, function(err, result){
+              req.flash('success', 'Your account has been deleted successfuly!');
+              res.redirect('/gateway');
+            });
+          }
+        });
+      }).catch(function(e){
+        handler(e.message);
+      });
+    } catch(e) {
+      var errors = [];
+
+      e.forEach(function(element) {
+        errors.push(element.param + ' ' + element.msg);
+      }, this);
+
+      handler(errors);
+    }
+  });
 });
 
 app.get('/logout', function(req, res){

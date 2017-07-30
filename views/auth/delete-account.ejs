@@ -1,0 +1,45 @@
+<%- include('../modules/head') -%>
+
+<body class="stretched">
+
+	<!-- Document Wrapper
+	============================================= -->
+	<div id="container wrapper" class="clearfix">
+
+    <%- include('../modules/header') -%>
+    <%- include('../modules/page-title') -%>
+
+		<!-- Content
+		============================================= -->
+		<section id="content">
+			<div class="content-wrap">
+				<div class="container clearfix divcenter">
+          <%- include('../modules/errors') -%>
+
+          <h1>Delete Your Account</h1>
+          <form action="/delete-account" method="POST" class="nobottommargin" style="max-width: 550px;">
+            <div class="col_full">
+              <label for="email">Email:</label>
+              <input type="text" name="email" placeholder="Enter your email" id="email" value="<%= (old.length) ? old[0].email : null %>" class="form-control">
+            </div>
+            <div class="col_full">
+              <label for="password">Password:</label>
+              <input type="password" id="password" name="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit">Delete My Account</button>  
+          </form>  
+        </div>
+			</div>
+		</section><!-- #content end -->
+
+		<%- include('../modules/footer') -%>
+
+	</div><!-- #wrapper end -->
+
+	<!-- Go To Top
+	============================================= -->
+	<div id="gotoTop" class="icon-angle-up"></div>
+  <%- include('../modules/script') -%>
+
+</body>
+</html>
