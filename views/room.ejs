@@ -93,7 +93,7 @@
 		</div>
 	</div><!-- #wrapper end -->
 	<div class="chat-list">
-		<ul class="resize vertical" id="messages"></ul>
+		<ul class="resize vertical" id="messages" style="margin-left: 0px; margin-bottom: 60px;"></ul>
 	</div>
 	<div class="ctrl-panel" style="display: none;"></div>
 	<input type="hidden" id="user" value="<%= user %>">
@@ -236,7 +236,7 @@
 			socket.on('access_granted', function(data){
 				$('.ctrl-panel').append(data.html).show();
 				initDeck();
-				admin();
+				admin_privileges();
 				reloadSlides(data.slides);
 				
 				is_admin = true;
@@ -250,7 +250,7 @@
 				initDeck({
 					touch: { swipeDirection: false }
 				});
-				user();
+				user_privileges();
 				is_admin = false;
 			});
 
@@ -281,7 +281,6 @@
 				var isMsgFocus = (key_map[13] && $('#m').is(':focus')); //Enter key
 
 				if (key_map[16] && isMsgFocus) {
-					console.log('Shift + isfocused');
 					$('#m').val($('#m').val() + '\n');
 				} else if (isMsgFocus) {
 					emitMessage();
@@ -290,7 +289,7 @@
 
 			function emitMessage() {
 				socket.emit('chat_message', { 
-					message: $('#m').val(),
+					message: user.name + ': ' + $('#m').val(),
 					room: room
 				});
 				$('#m').val('');
@@ -304,7 +303,7 @@
 				$('#messages').append($('<li>').html('<p class="white">' + msg + '</p>'));
 			});
 
-			var user = function() {
+			var user_privileges = function() {
 				var paper = new Raphael(
 					$('#canvas-container'), 
 					window.width, 
@@ -336,7 +335,7 @@
 				});
 			};
 
-			var admin = function() {
+			var admin_privileges = function() {
 				window.setInterval(function(){
           if (mouse_state) {
             $("body").mousemove(function(e) {
