@@ -11,23 +11,18 @@
 
 	<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"/>
 	<link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
-	
-	<!--
-		<link rel="stylesheet" href="assets/revealjs/css/reveal.css" />
-		<link rel="stylesheet" href="assets/revealjs/css/theme/black.css" id="theme" />
-  -->
-		<link rel="stylesheet" media="screen" href="deck/core/deck.core.css">
+	<link rel="stylesheet" media="screen" href="deck/core/deck.core.css">
 
-		<link rel="stylesheet" media="screen" href="deck/extensions/goto/deck.goto.css">
-		<link rel="stylesheet" media="screen" href="deck/extensions/menu/deck.menu.css">
-		<link rel="stylesheet" media="screen" href="deck/extensions/navigation/deck.navigation.css">
-		<link rel="stylesheet" media="screen" href="deck/extensions/status/deck.status.css">
-		<link rel="stylesheet" media="screen" href="deck/extensions/scale/deck.scale.css">
+	<link rel="stylesheet" media="screen" href="deck/extensions/goto/deck.goto.css">
+	<link rel="stylesheet" media="screen" href="deck/extensions/menu/deck.menu.css">
+	<link rel="stylesheet" media="screen" href="deck/extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" media="screen" href="deck/extensions/status/deck.status.css">
+	<link rel="stylesheet" media="screen" href="deck/extensions/scale/deck.scale.css">
 
-		<link rel="stylesheet" media="screen" href="deck/themes/style/web-2.0.css">
+	<link rel="stylesheet" media="screen" href="deck/themes/style/web-2.0.css">
 
-		<link rel="stylesheet" media="screen" href="deck/themes/transition/horizontal-slide.css">
-		<script src="deck/modernizr.custom.js"></script>
+	<link rel="stylesheet" media="screen" href="deck/themes/transition/horizontal-slide.css">
+	<script src="deck/modernizr.custom.js"></script>
 	<style>
 		.ctrl-panel {
 			padding: 5px;
@@ -93,13 +88,7 @@
 		<div class="deck-container">
 			<!-- Begin slides. Just make elements with a class of slide. -->
 			<section class="slide">
-				<h1>Slide</h1>
-			</section>
-			<section class="slide">
-				<h1>Content</h1>
-			</section>
-			<section class="slide">
-				<h1>Here</h1>
+				<h1>Loading...</h1>
 			</section>
 		</div>
 	</div><!-- #wrapper end -->
@@ -123,9 +112,9 @@
 					</a>
 				</li>
 				<li>
-					<a class="feature-box fbox-rounded fbox-effect pr-45" id="toggle_none">
+					<a href="#" class="feature-box fbox-rounded fbox-effect pr-45" id="toggle_none">
 						<div class="fbox-icon pt-5">
-							<i class="icon-file-alt pt-10"></i>
+							<i class="icon-minus-sign pt-10"></i>
 						</div>
 					</a>
 				</li>
@@ -156,10 +145,6 @@
 	<!-- jQuery UI -->
 	<script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
-	<!-- Reveal.js is for presentations -->
-	<!--script src="assets/revealjs/lib/js/head.min.js"></script>
-	<script src="assets/revealjs/js/reveal.js"></script-->
-
 	<!-- Raphael library -->
 	<script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.js"></script>
 
@@ -168,23 +153,69 @@
 
   <script>
     $(function() {
-			// Initialize the Reveal.js library with the default config options
-			// See more here https://github.com/hakimel/reveal.js#configuration
-			/*
-			function initReveal() {
-				Reveal.initialize({ 
-					history: true, 
-					mouseWheel: false,
-					controls: false,
-					touch: false,
-					keyboard: false,
-					embedded: false,
-					progress: false,
-					autoSlide: 0
-				});
+			var is_admin = false;
+			var socket   = io.connect($('#host').val() + '/lobby');
+
+			function initDeck(is_admin = true) {
+				if (is_admin) {
+					$.deck.defaults = {
+						classes: {
+							after: 'deck-after',
+							before: 'deck-before',
+							childCurrent: 'deck-child-current',
+							current: 'deck-current',
+							loading: 'deck-loading',
+							next: 'deck-next',
+							onPrefix: 'on-slide-',
+							previous: 'deck-previous'
+						},
+
+						selectors: {
+							container: '.deck-container',
+							slides: '.slide'
+						},
+
+						touch: {
+							swipeDirection: false,
+							swipeTolerance: 60
+						},
+
+						initLockTimeout: 1000,
+						hashPrefix: 'slide',
+						preventFragmentScroll: true,
+						setAriaHiddens: true
+					}
+				}
+
+				$.deck('.slide');
 			}
-			*/
-			$.deck('.slide');
+
+			function reloadSlides(slides) {
+				var $slides = $('.deck-container');
+
+				$slides.empty();
+
+				if (slides.list.length >= 1) {
+					for (var i = 0; i < slides.list.length; i++) {
+						var slide = slides.list[i];
+						var ext   = slide.split('.').pop();
+
+						if (ext.toLowerCase() !== 'pdf') {
+							var html = '';
+
+							html += '<section class="slide">';
+							html += '<img src="/slide/' + room + '/' + slide + '" style="width: 100%; height: 100%;">';
+							html +=	'</section>';
+
+							$slides.append(html);	
+						}
+					}
+				} else {
+					$slides.append('<section class="slide"><h1>No Slide Available</h1></section>');
+				}
+
+				$.deck('.slide');
+			}
 
 			var $container = $('.deck-container');
 			$container.width('100%').height($(window).height() - 129);
@@ -199,40 +230,37 @@
       var prevScreenX, prevScreenY, currScreenX, currScreenY = 0; 
 			//End of Admin state
 
-			var socket = io.connect($('#host').val() + '/lobby');
-
 			// Admin and User
 			socket.emit('join_room', { room: room, id: user.id });
 
-			socket.on('access_granted', function(panel){
-				$('.ctrl-panel').append(panel).show();
+			socket.on('access_granted', function(data){
+				$('.ctrl-panel').append(data.html).show();
+				initDeck();
 				admin();
+				reloadSlides(data.slides);
+				
+				is_admin = true;
 			});
 
-			socket.on('revoke_admin', function(action){
-				
+			socket.on('force_hash', function(currentHash){
+				window.location.hash = currentHash;
+			});
+
+			socket.on('load_slides', function(data){
+				initDeck({
+					touch: { swipeDirection: false }
+				});
+				user();
+				is_admin = false;
 			});
 
 			socket.on('admin_response', function(eventName){ 
-				Reveal[eventName](); 
-				socket.emit('change_current', { hash: location.hash }); 
+				$.deck(eventName); 
+				socket.emit('change_current', { hash: location.hash, room: room }); 
 			});
 
 			socket.on('update_slide', function(slides){
-				var $slides = $('.slides');
-
-				$slides.empty();
-
-				if (slides.list.length) {
-					for (var i = 0; i < slides.list.length; i++) {
-						$slides.append('<section data-background="/slide/' + slides.list[i] + '"></section>');
-					}
-				} else {
-					$slides.append('<section data-background="http://via.placeholder.com/1280x800"></section>');
-				}
-
-				socket.emit('illegal_hash');
-				initReveal();
+				reloadSlides(slides);
 			});
 
 			$('ul.chat-ul li a#toggle_chat').click(function(e) {
@@ -241,16 +269,10 @@
     	});
 
 			$('ul.chat-ul li a#toggle_none').click(function(e) {
-        e.preventDefault();
-    	});
-
-			function emitMessage() {
-				socket.emit('chat_message', { 
-					message: $('#m').val(),
-					room: room
-				});
-				$('#m').val('');
-			}
+				e.preventDefault();
+				
+				$('.ctrl-panel').toggle();
+			});
 
 			var key_map = {};
 			onkeydown = onkeyup = function(e){
@@ -259,10 +281,19 @@
 				var isMsgFocus = (key_map[13] && $('#m').is(':focus')); //Enter key
 
 				if (key_map[16] && isMsgFocus) {
+					console.log('Shift + isfocused');
 					$('#m').val($('#m').val() + '\n');
 				} else if (isMsgFocus) {
 					emitMessage();
 				}
+			}
+
+			function emitMessage() {
+				socket.emit('chat_message', { 
+					message: $('#m').val(),
+					room: room
+				});
+				$('#m').val('');
 			}
 
 			$('#sm').click(function(){
@@ -298,10 +329,6 @@
 
 				socket.on('online_counter', function(val){
 					$('#online').text(val);
-				});
-
-				socket.on('force_hash', function(currentHash){
-					window.location.hash = currentHash;
 				});
 
 				$(window).on('hashchange', function(){
@@ -369,7 +396,8 @@
 						contentType: false,
 						type: 'POST',
 						success : function(data) {
-							console.log(data);
+							socket.emit('illegal_hash');
+							location.reload();
 						}
 						,error:function(a, b, c) {
 							console.log(a);
@@ -388,9 +416,9 @@
 				});
 
 				$('.ctrl-panel').on('click', '.navigate', function() {
-					var id = $(this).attr('id') // or this.id
-					
-					socket.emit('admin_request', { eventName: id });
+					var id = $(this).data('act'); // or this.id
+
+					socket.emit('admin_request', { eventName: id, room: room });
 				});
 
 				$('.ctrl-panel').on('click', '.toggle-panel', function() {

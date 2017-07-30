@@ -27,7 +27,7 @@ app.engine('ejs', ejs.renderFile);
 app.set('view engine', 'ejs');
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/slide', express.static(path.join(__dirname, 'storage/slides')));
+app.use('/slide', express.static(path.join(__dirname, 'storage')));
 app.use('/room',  express.static(path.join(__dirname, '/public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(validator({
@@ -89,15 +89,29 @@ var dir     = path.join(__dirname, '/storage');
 function update_slide(socket, room_dir, room_id) {
   fse.readdir(room_dir, (err, list) => {
     if (err) console.log(err);
-    data = { list: [], mtime: [] };
+    var data = getSlides(list, room_dir);
 
+    socket.in(room_id).emit('update_slide', data);
+  });
+}
+
+function getSlides(list, room_dir) {
+  data = { list: [], mtime: [] };
+
+  if (typeof list != 'undefined') {
     for (content of list) {
       data.list.push(content);
       data.mtime.push(fse.statSync(room_dir + '/' + content).mtime.getTime());
     }
+  }
 
-    socket.in(room_id).emit('update_slide', data);
-  });
+  return data;
+
+  /*
+  lobby_io.in(room_id).emit('update_slide', data);
+  
+  current = '#slide-0';
+  */
 }
 
 function rmDir(dirPath, removeSelf = false) {
@@ -161,12 +175,24 @@ lobby_io.on('connection', function(socket){
 
   socket.on('join_room', function(data){
     socket.join(data.room);
+    var room_dir = dir + '/' + data.room;
 
     if (room_list[data.room].admin.id == data.id) {
       ejs.renderFile(
         __dirname + '/views/room/admin-panel.ejs',
         function(err, str){
-          socket.emit('access_granted', str);
+          fse.readdir(room_dir, function(err, files){
+            var result = getSlides(files, room_dir);
+
+            lobby_io.in(data.room).emit('access_granted', { html: str, slides: result });
+          });
+        }
+      );
+    } else {
+      fse.readdir(room_dir, function(err, files){
+        var data = getSlides(files, room_dir);
+
+        lobby_io.in(data.room).emit('load_slides', { slides: data });
       });
     }
   });
@@ -178,9 +204,12 @@ lobby_io.on('connection', function(socket){
         admin: data.admin 
       };
 
-      rmDir(dir + '/' + data.id); //clear directory before used
-      
-      lobby_io.emit('room_created', data.id);
+      var room_dir = dir + '/' + data.id;
+
+      fse.ensureDir(room_dir, (err) => {
+        rmDir(room_dir); //clear directory before used
+        lobby_io.emit('room_created', data.id);
+      });
     } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
   });
 
@@ -194,64 +223,18 @@ lobby_io.on('connection', function(socket){
 
   socket.on('admin_request', function(data){
     switch(data.eventName) {
-      case 'mouse_toggle' : client_io.emit('mouse_toggle_update', data.content); break;
-      default : client_io.emit('admin_response', data.eventName); break; 
+      case 'mouse_toggle' : lobby_io.in(data.room).emit('mouse_toggle_update', data.content); break;
+      default : lobby_io.in(data.room).emit('admin_response', data.eventName); break; 
     }
   });
-});
-
-/*
-admin_io.on('connection', function(socket){
-  socket.on('mouse_position', function(data) {
-    client_io.emit('mouse_position_update', data);
-  });
-
-  socket.on('admin_request', function(data){
-    switch(data.eventName) {
-      case 'mouse_toggle' : client_io.emit('mouse_toggle_update', data.content); break;
-      default : client_io.emit('admin_response', data.eventName); break; 
-    }
-  });
-});
-
-client_io.on('connection', function(socket){
-  socket.key = socket.conn.remoteAddress;
-  online_client[socket.key] = socket;
-
-  ++online;
-  client_io.emit('online_counter', Object.keys(online_client).length);
-  update_slide(client_io);
-
-  socket.on('illegal_hash', function(){    
-    client_io.emit('force_hash', current);
-  });
-
-  socket.on('disconnect', function(data){
-    delete online_client[socket.key];
-
-    --online;
-    if (Object.keys(online_client).length > 1)
-      client_io.emit('online_counter', Object.keys(online_client).length);
-    else {
-      current = '#';
-      client_io.emit('force_hash', current);
-    }
-  });
-
-  socket.on('chat_message', function(data){
-    client_io.emit('chat_message', data.message); 
-  });
-
-  socket.on('change_username', function(msg){ client_io.emit('change_username', msg); });
 
   socket.on('change_current', function(data){
     if (data.hash !== '') {
       current = data.hash;
-      client_io.emit('force_hash', current);
+      lobby_io.in(data.room).emit('force_hash', current);
     }
   });
 });
-*/
 
 console.log('Your presentation is running on http://localhost:' + port);
 
@@ -297,7 +280,7 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
 
       var dt        = dateTime.create();
       var curr_date = dt.format('Y_m_d');
-      var fname     = room_dir + '/' + curr_date;
+      var fname     = room_dir + '/' + curr_date + '.pdf';
 
       fse.rename(file.path, fname, function(){
         pdf2image.convertPDF(fname,{
@@ -306,9 +289,15 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
           outputFormat : room_dir + '/%d',
           outputType : 'jpg'
         }).then(function(pageList) {
-          update_slide(lobby_io, room_dir, room_id);
-          current = '#';
-          res.send({ success: 'Completed' });
+          fse.readdir(room_dir, (err, list) => {
+            if (err) res.send({ error: err.message });
+            var data = getSlides(list, room_dir);
+
+            lobby_io.in(room_id).emit('update_slide', data);
+            
+            current = '#slide-0';
+            res.send({ success: 'Completed' });
+          });
         });
       });
     });
@@ -349,12 +338,14 @@ app.get('/lobby', loggedIn, function(req, res){
   res.render('lobby/index', { host: host, user: req.user });
 });
 
-app.get('/slide/:img', function(req, res){
-  var img = req.params.img; 
+app.get('/slide/:room_id/:img', function(req, res){
+  var img     = req.params.img;
+  var room_id = req.params.room_id;
+ 
   if (!img) console.log('Error!');
 
   res.writeHead(200, { 'Content-Type': mime.lookup(img) });
-  res.end(dir + '/slides/' + img); // Send the file data to the browser.
+  res.end(dir + '/' + room_id + '/' + img); // Send the file data to the browser.
 });
 
 app.get('/gateway', function(req, res) {
