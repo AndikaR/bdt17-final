@@ -30,21 +30,6 @@
             ============================================= -->
             <div id="portfolio" class="portfolio grid-container portfolio-4 clearfix"></div>
           </div>
-
-          <div class="col-md-4 bottommargin">
-            <% for (var i = 0; i < 4; i++) { %>
-              <div class="spost clearfix">
-                <div class="entry-c">
-                  <div class="entry-title">
-                    <h4><a href="#">UK government weighs Tesla's Model S for its ??5 million electric vehicle fleet</a></h4>
-                  </div>
-                  <ul class="entry-meta">
-                    <li><i class="icon-user"></i> 20th Nov 2014</li>
-                  </ul>
-                </div>
-              </div>
-            <% } %>
-          </div>
         </div>
       </div>
 		</section><!-- #content end -->
@@ -62,7 +47,7 @@
   <script>
     $(function(){
       var socket = io.connect('<%= host %>/lobby');
-      var user   = $('#user').val();
+      var user   = JSON.parse($('#user').val());
 
       socket.emit('req_available_room');
 
@@ -75,9 +60,13 @@
         $('.room-error').show();
       });
 
-      socket.on('room_created', function(room_id){
-        $('.room-error').hide();
-        window.location = '/room/' + room_id;
+      socket.on('room_created', function(data){
+        console.log(user.id);
+        console.log(data.admin);
+        if (user.id == data.admin) {
+          $('.room-error').hide();
+          window.location = '/room/' + data.room;
+        }
       });
 
       $('#c-room').on('click', function(){
@@ -87,7 +76,7 @@
         socket.emit('create_room', { 
           id: room_id, 
           name: room_name,
-          admin: user
+          admin: JSON.stringify(user)
         });
       });
     });

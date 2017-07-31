@@ -259,8 +259,9 @@
 				socket.emit('change_current', { hash: location.hash, room: room }); 
 			});
 
-			socket.on('update_slide', function(slides){
-				reloadSlides(slides);
+			socket.on('update_slide', function(data){
+				reloadSlides(data.slides);
+				window.location.hash = data.hash;
 				location.reload();
 			});
 

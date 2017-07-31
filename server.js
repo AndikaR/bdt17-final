@@ -107,12 +107,6 @@ function getSlides(list, room_dir) {
   }
 
   return data;
-
-  /*
-  lobby_io.in(room_id).emit('update_slide', data);
-  
-  current = '#slide-0';
-  */
 }
 
 function rmDir(dirPath, removeSelf = false) {
@@ -296,11 +290,11 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
         }).then(function(pageList) {
           fse.readdir(room_dir, (err, list) => {
             if (err) res.send({ error: err.message });
-            var data = getSlides(list, room_dir);
+            var result = getSlides(list, room_dir);
 
-            lobby_io.in(room_id).emit('update_slide', data);
-            
             current = '#slide-0';
+            lobby_io.in(room_id).emit('update_slide', { hash: current, slides: result });
+            
             res.send({ success: 'Completed' });
           });
         });
