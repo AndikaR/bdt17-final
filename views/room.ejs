@@ -153,10 +153,9 @@
 
   <script>
     $(function() {
-			var is_admin = false;
 			var socket   = io.connect($('#host').val() + '/lobby');
 
-			function initDeck(is_admin = true) {
+			function initDeck(is_admin) {
 				if (is_admin) {
 					$.deck.defaults = {
 						classes: {
@@ -234,12 +233,12 @@
 			socket.emit('join_room', { room: room, id: user.id });
 
 			socket.on('access_granted', function(data){
-				$('.ctrl-panel').append(data.html).show();
-				initDeck();
-				admin_privileges();
-				reloadSlides(data.slides);
-				
-				is_admin = true;
+				if (user.id == data.admin) {
+					$('.ctrl-panel').append(data.html).show();
+					initDeck(true);
+					admin_privileges();
+					reloadSlides(data.slides);
+				}
 			});
 
 			socket.on('force_hash', function(currentHash){
@@ -247,11 +246,12 @@
 			});
 
 			socket.on('load_slides', function(data){
-				initDeck({
-					touch: { swipeDirection: false }
-				});
-				user_privileges();
-				is_admin = false;
+				if (user.id == data.caller) {
+					initDeck(true);
+					user_privileges();
+					reloadSlides(data.slides);
+					window.location.hash = data.hash;
+				}
 			});
 
 			socket.on('admin_response', function(eventName){ 
@@ -261,6 +261,7 @@
 
 			socket.on('update_slide', function(slides){
 				reloadSlides(slides);
+				location.reload();
 			});
 
 			$('ul.chat-ul li a#toggle_chat').click(function(e) {
@@ -396,7 +397,7 @@
 						type: 'POST',
 						success : function(data) {
 							socket.emit('illegal_hash');
-							location.reload();
+							//location.reload();
 						}
 						,error:function(a, b, c) {
 							console.log(a);

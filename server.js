@@ -185,15 +185,15 @@ lobby_io.on('connection', function(socket){
           fse.readdir(room_dir, function(err, files){
             var result = getSlides(files, room_dir);
 
-            lobby_io.in(data.room).emit('access_granted', { html: str, slides: result });
+            lobby_io.in(data.room).emit('access_granted', { admin: data.id, html: str, slides: result });
           });
         }
       );
     } else {
       fse.readdir(room_dir, function(err, files){
-        var data = getSlides(files, room_dir);
+        var result = getSlides(files, room_dir);
 
-        lobby_io.in(data.room).emit('load_slides', { slides: data });
+        lobby_io.in(data.room).emit('load_slides', { caller: data.id, slides: result, hash: current });
       });
     }
   });
@@ -213,7 +213,7 @@ lobby_io.on('connection', function(socket){
 
       fse.ensureDir(room_dir, (err) => {
         rmDir(room_dir); //clear directory before used
-        lobby_io.emit('room_created', data.id);
+        lobby_io.emit('room_created', { room: data.id, admin: admin_data.id });
       });
     } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
   });
