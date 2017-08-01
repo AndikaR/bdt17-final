@@ -331,7 +331,7 @@ app.get('/room/:room_id', loggedIn, function(req, res){
   if (!found) {
     return res.redirect('/lobby');
   } else {
-    res.render('room', { 
+    res.render('room/index', { 
       host: host, 
       user: JSON.stringify(user), 
       room_id: room_id

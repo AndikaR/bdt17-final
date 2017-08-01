@@ -13,7 +13,11 @@
         <div id="primary-menu-trigger"><i class="icon-reorder"></i></div>
 
         <ul>
-          <li><a data-toggle="modal" data-target="#create-room" id="croom" href="#create-room"><div>Create Room</div></a></li>
+          <% if (typeof room_id != 'undefined' && typeof room_id != 'null') { %>
+            <li><a href="/lobby"><div>Back to Lobby</div></a></li>
+          <% } else { %>
+            <li><a data-toggle="modal" data-target="#create-room" id="croom" href="#create-room"><div>Create Room</div></a></li>
+          <% } %>
         </ul>
 
         <!-- Logout
