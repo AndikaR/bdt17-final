@@ -83,7 +83,6 @@ var online_client = [];
 var room_list     = {};
 
 var online  = 0;
-var current = '#';
 var dir     = path.join(__dirname, '/storage');
 
 //---------------functions---------------
@@ -141,8 +140,6 @@ function CustomException(message) {
 }
 
 //---------------end of functions---------------
-var admin_io  = io.of('/admin');
-var client_io = io.of('/client');
 var lobby_io  = io.of('/lobby');
 
 lobby_io.on('connection', function(socket){
@@ -187,7 +184,8 @@ lobby_io.on('connection', function(socket){
       fse.readdir(room_dir, function(err, files){
         var result = getSlides(files, room_dir);
 
-        lobby_io.in(data.room).emit('load_slides', { caller: data.id, slides: result, hash: current });
+        //here
+        lobby_io.in(data.room).emit('load_slides', { caller: data.id, slides: result, hash: room_list[data.room].current });
       });
     }
   });
@@ -200,6 +198,7 @@ lobby_io.on('connection', function(socket){
       room_list[data.id] = { 
         name: data.name,
         admin: admin_data,
+        current: '#',
         identicon: identicon.toString('base64')
       };
 
@@ -207,6 +206,14 @@ lobby_io.on('connection', function(socket){
 
       fse.ensureDir(room_dir, (err) => {
         rmDir(room_dir); //clear directory before used
+
+        let new_room  = room_list[data.id];
+        new_room.id   = data.id;
+
+        ejs.renderFile(__dirname + '/views/lobby/room-list.ejs', new_room, function(err, str){
+          lobby_io.emit('append_room', { room: str, room_id: data.id });
+        }); 
+
         lobby_io.emit('room_created', { room: data.id, admin: admin_data.id });
       });
     } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
@@ -229,8 +236,8 @@ lobby_io.on('connection', function(socket){
 
   socket.on('change_current', function(data){
     if (data.hash !== '') {
-      current = data.hash;
-      lobby_io.in(data.room).emit('force_hash', current);
+      room_list[data.room].current = data.hash;
+      lobby_io.in(data.room).emit('force_hash', data.hash);
     }
   });
 });
@@ -283,7 +290,7 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
 
       fse.rename(file.path, fname, function(){
         pdf2image.convertPDF(fname,{
-          density : 200,
+          density : 100,
           quality : 100,
           outputFormat : room_dir + '/%d',
           outputType : 'jpg'
@@ -292,8 +299,9 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
             if (err) res.send({ error: err.message });
             var result = getSlides(list, room_dir);
 
-            current = '#slide-0';
-            lobby_io.in(room_id).emit('update_slide', { hash: current, slides: result });
+            //here
+            room_list[room_id].current = '#slide-0';
+            lobby_io.in(room_id).emit('update_slide', { hash: room_list[room_id].current, slides: result });
             
             res.send({ success: 'Completed' });
           });
@@ -303,9 +311,8 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
   }
 });
 
-app.get('/', function(req, res){
-  var host = getHost(req);
-  res.render('index', { hash: current, host: host });
+app.get('/', loggedIn, function(req, res){
+  res.redirect('/lobby');
 });
 
 app.get('/room/:room_id', loggedIn, function(req, res){
@@ -334,6 +341,16 @@ app.get('/room/:room_id', loggedIn, function(req, res){
 
 app.get('/lobby', loggedIn, function(req, res){
   var host = getHost(req);
+
+  /*
+  for (var index in room_list) {
+    if (lobby_io.in(index)) {
+      console.log(lobby_io.rooms);
+      //lobby_io.socket.leave(index);
+      //console.log('Leaving room: ' + index);
+    }
+  }
+  */
 
   res.render('lobby/index', { host: host, user: JSON.stringify(req.user) });
 });

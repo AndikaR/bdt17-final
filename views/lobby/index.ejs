@@ -55,14 +55,16 @@
         $('#portfolio').append(rooms);
       });
 
+      socket.on('append_room', function(data){
+        $('#portfolio').removeClass('portfolio grid-container portfolio-4 clearfix').append(data.room).focus().addClass('portfolio grid-container portfolio-4 clearfix');
+      });
+
       socket.on('room_exists', function(msg){
         $('#room-error').text(msg);
         $('.room-error').show();
       });
 
       socket.on('room_created', function(data){
-        console.log(user.id);
-        console.log(data.admin);
         if (user.id == data.admin) {
           $('.room-error').hide();
           window.location = '/room/' + data.room;
