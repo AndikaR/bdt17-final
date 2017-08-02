@@ -184,7 +184,6 @@ lobby_io.on('connection', function(socket){
       fse.readdir(room_dir, function(err, files){
         var result = getSlides(files, room_dir);
 
-        //here
         lobby_io.in(data.room).emit('load_slides', { caller: data.id, slides: result, hash: room_list[data.room].current });
       });
     }
@@ -194,11 +193,15 @@ lobby_io.on('connection', function(socket){
     if (!room_list.hasOwnProperty(data.id)) {
       var identicon  = jdenticon.toPng(data.id, 300);
       var admin_data = JSON.parse(data.admin);
+      var room_user  = {};
+
+      room_user[admin_data.email] = 1; //1 for admin, 0 for user
 
       room_list[data.id] = { 
         name: data.name,
         admin: admin_data,
         current: '#',
+        room_user: room_user,
         identicon: identicon.toString('base64')
       };
 
@@ -299,7 +302,6 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
             if (err) res.send({ error: err.message });
             var result = getSlides(list, room_dir);
 
-            //here
             room_list[room_id].current = '#slide-0';
             lobby_io.in(room_id).emit('update_slide', { hash: room_list[room_id].current, slides: result });
             
@@ -331,6 +333,30 @@ app.get('/room/:room_id', loggedIn, function(req, res){
   if (!found) {
     return res.redirect('/lobby');
   } else {
+    var last_room = req.session.last_room;
+    var is_admin  = req.session.is_admin;
+    var email     = req.user.email;
+
+    if (email in room_list[room_id].room_user) {
+      if (last_room && last_room != room_id) {
+        if (is_admin) {
+          //emit event to destroy room, kick user to lobby
+          delete room_list[last_room];
+        } else {
+          delete room_list[last_room].room_user[email];
+        }
+
+        req.session.is_admin = 0;
+      } else {
+        req.session.is_admin = room_list[room_id].room_user[email];
+      }
+    } else {
+      room_list[room_id].room_user[email] = 0;
+      req.session.is_admin = 0;
+    }
+    
+    req.session.last_room = room_id;
+
     res.render('room/index', { 
       host: host, 
       user: JSON.stringify(user), 
@@ -342,15 +368,21 @@ app.get('/room/:room_id', loggedIn, function(req, res){
 app.get('/lobby', loggedIn, function(req, res){
   var host = getHost(req);
 
-  /*
-  for (var index in room_list) {
-    if (lobby_io.in(index)) {
-      console.log(lobby_io.rooms);
-      //lobby_io.socket.leave(index);
-      //console.log('Leaving room: ' + index);
+  var last_room = req.session.last_room;
+  var is_admin  = req.session.is_admin;
+  var email     = req.user.email;
+
+  if (last_room > 0) {
+    if (is_admin) {
+      //emit event to destroy room, kick user to lobby
+      delete room_list[last_room];
+    } else {
+      delete room_list[last_room].room_user[email];
     }
+
+    req.session.is_admin  = 0;
+    req.session.last_room = 0;
   }
-  */
 
   res.render('lobby/index', { host: host, user: JSON.stringify(req.user) });
 });
@@ -523,6 +555,11 @@ passport.deserializeUser(function(user, done) {
     data.id    = user.id;
     data.name  = user.username;
     data.email = user.email;
+    
+    data.last_room = {
+      is_admin: 0,
+      room_id: 0
+    };
 
     done(err, data);
   });
