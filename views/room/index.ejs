@@ -319,7 +319,7 @@
 				circle.hide();
 
 				socket.on('room_deleted', function(){
-					$.redirect(host, {'is_kicked': true});
+					$.redirect(host, {'status': 1}, 'GET');
 				});
 
 				socket.on('mouse_toggle_update', function(data){

@@ -331,7 +331,7 @@ app.get('/room/:room_id', loggedIn, function(req, res){
   }
 
   if (!found) {
-    return res.redirect('/lobby');
+    return res.redirect('/lobby?status=2');
   } else {
     var last_room = req.session.last_room;
     var is_admin  = req.session.is_admin;
@@ -342,6 +342,7 @@ app.get('/room/:room_id', loggedIn, function(req, res){
         if (is_admin) {
           //emit event to destroy room, kick user to lobby
           lobby_io.in(last_room).emit('room_deleted');
+          lobby_io.emit('room_removed', { room_id: last_room });
           delete room_list[last_room];
         } else {
           delete room_list[last_room].room_user[email];
@@ -372,12 +373,13 @@ app.all('/lobby', loggedIn, function(req, res){
   var last_room = req.session.last_room;
   var is_admin  = req.session.is_admin;
   var email     = req.user.email;
-  var is_kicked = req.body.is_kicked || false;
+  var status    = req.query.status || 0;
 
   if (last_room > 0) {
     if (is_admin) {
       //emit event to destroy room, kick user to lobby
       lobby_io.in(last_room).emit('room_deleted');
+      lobby_io.emit('room_removed', { room_id: last_room });
       delete room_list[last_room];
     } else {
       if (room_list[last_room] !== undefined) {
@@ -392,7 +394,7 @@ app.all('/lobby', loggedIn, function(req, res){
   res.render('lobby/index', { 
     host: host, 
     user: JSON.stringify(req.user),
-    is_kicked: is_kicked 
+    status: status 
   });
 });
 
