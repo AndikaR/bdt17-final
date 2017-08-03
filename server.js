@@ -293,8 +293,8 @@ app.post('/admin/file-upload/:room_id', loggedIn, function(req, res){
 
       fse.rename(file.path, fname, function(){
         pdf2image.convertPDF(fname,{
-          density : 100,
-          quality : 100,
+          density : 110,
+          quality : 70,
           outputFormat : room_dir + '/%d',
           outputType : 'jpg'
         }).then(function(pageList) {
@@ -318,10 +318,10 @@ app.get('/', loggedIn, function(req, res){
 });
 
 app.get('/room/:room_id', loggedIn, function(req, res){
-  var host     = getHost(req);
-  var room_id  = req.params.room_id;
-  var found    = false;
-  var user     = req.user;
+  var host      = getHost(req);
+  var room_id   = req.params.room_id;
+  var found     = false;
+  var user      = req.user;
 
   for (var room in room_list) {
     if (room == room_id) {
@@ -341,6 +341,7 @@ app.get('/room/:room_id', loggedIn, function(req, res){
       if (last_room && last_room != room_id) {
         if (is_admin) {
           //emit event to destroy room, kick user to lobby
+          lobby_io.in(last_room).emit('room_deleted');
           delete room_list[last_room];
         } else {
           delete room_list[last_room].room_user[email];
@@ -365,26 +366,34 @@ app.get('/room/:room_id', loggedIn, function(req, res){
   }
 });
 
-app.get('/lobby', loggedIn, function(req, res){
+app.all('/lobby', loggedIn, function(req, res){
   var host = getHost(req);
 
   var last_room = req.session.last_room;
   var is_admin  = req.session.is_admin;
   var email     = req.user.email;
+  var is_kicked = req.body.is_kicked || false;
 
   if (last_room > 0) {
     if (is_admin) {
       //emit event to destroy room, kick user to lobby
+      lobby_io.in(last_room).emit('room_deleted');
       delete room_list[last_room];
     } else {
-      delete room_list[last_room].room_user[email];
+      if (room_list[last_room] !== undefined) {
+        delete room_list[last_room].room_user[email];
+      }
     }
 
     req.session.is_admin  = 0;
     req.session.last_room = 0;
   }
 
-  res.render('lobby/index', { host: host, user: JSON.stringify(req.user) });
+  res.render('lobby/index', { 
+    host: host, 
+    user: JSON.stringify(req.user),
+    is_kicked: is_kicked 
+  });
 });
 
 app.get('/slide/:room_id/:img', function(req, res){
