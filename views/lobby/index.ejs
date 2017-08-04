@@ -103,7 +103,6 @@
 
       socket.on('append_room', function(data){
         $('#portfolio').append(data.room);
-        setTimeout(function(){}, 1000);
       });
 
       socket.on('room_exists', function(msg){

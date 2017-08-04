@@ -123,6 +123,14 @@
 		<input type="text" id="m" style="height: 50px; font-size: 30px; padding-top: 3px; flex: 1;" placeholder="Type &amp; Hit Enter..">
 		<button class="button button-3d button-xlarge button-rounded button-teal pull-right" style="margin-top: 2px;" id="sm">Send</button>
 	</div>
+	<div style="position: absolute; top: 80px; width: 50%; left: 50%; transform: translate(-50%, 0%);z-index: 30; text-align: center; display: none;" class="progress-wrapper">
+		<p id="progress-status" style="margin-bottom: 5px;">Uploading...</p>
+		<div class="progress">
+			<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0" style="background-color:#1ABC9C; top: 10px;">
+				<span id="progress-value">0%</span>
+			</div>
+		</div>
+	</div>
 
 	<!-- Go To Top
 	============================================= -->
@@ -151,6 +159,7 @@
 	<!-- Main JavaScript file -->
 	<script src="assets/js/script.js"></script>
 	<script src="assets/js/jquery.redirect.js"></script>
+	<script src="assets/js/progressbar.js"></script>
 
   <script>
     $(function() {
@@ -405,25 +414,31 @@
 
 				$('.ctrl-panel').on('click', '#pdf-upload', function(){
 					var formData = new FormData($('form#pdf-upload-form').get(0));
-					
-					$.ajax({
-						url: '/admin/file-upload/' + room,
-						data: formData,
-						processData: false,
-						contentType: false,
-						type: 'POST',
-						success : function(data) {
-							//socket.emit('illegal_hash');
-							//location.reload();
+
+					let progressBar = $('.progress-bar');
+					$('.progress-wrapper').show();
+
+					//https://zinoui.com/blog/ajax-request-progress-bar
+					xhr = new XMLHttpRequest();
+					xhr.open('POST', '/admin/file-upload/' + room, true);
+					xhr.upload.onprogress = function (e) {
+						if (e.lengthComputable) {
+							var ratio = Math.floor((e.loaded / e.total) * 100) + '%';
+							$('#progress-value').text(ratio);
+							
+							progressBar.attr('aria-valuenow', e.loaded).css('width', ratio);
+							progressBar.attr('aria-valuemax', e.total).css('width', '100%');
 						}
-						,error:function(a, b, c) {
-							console.log(a);
-							console.log(b);
-							console.log(c);
-						}
-					}).done(function(data) {
-						//On done
-					});
+					}
+					xhr.upload.onloadstart = function (e) {
+						progressBar.attr('aria-valuenow', 0).css('width', '0%');
+					}
+					xhr.upload.onloadend = function (e) {
+						$('#progress-status').text('Reloading Page...');
+						$('#progress-value').text('100%');
+						progressBar.attr('aria-valuenow', e.loaded).css('width', '100%');
+					}
+					xhr.send(formData);
 				});
 
 				$('.ctrl-panel').on('change', '#pdf-file', function(){
