@@ -159,12 +159,12 @@
 	<!-- Main JavaScript file -->
 	<script src="assets/js/script.js"></script>
 	<script src="assets/js/jquery.redirect.js"></script>
-	<script src="assets/js/progressbar.js"></script>
 
   <script>
     $(function() {
 			let host   = $('#host').val() + '/lobby';
 			var socket = io.connect(host);
+			let progressBar = $('.progress-bar');
 
 			function initDeck(is_admin) {
 				if (is_admin) {
@@ -331,6 +331,25 @@
 					socket.emit('illegal_change', { room: room, user: user.id});
 				});
 
+				socket.on('upload_started', function(data){
+					$('.progress-wrapper').show();
+					progressBar.css('width', '0%');
+				});
+
+				socket.on('upload_processed', function(data){
+					$('#progress-value').text(data.ratio);
+
+					progressBar.css('width', data.ratio);
+					progressBar.css('width', '100%');
+				});
+
+				socket.on('upload_finished', function(data){
+					$('#progress-status').text('Reloading Page...');
+					$('#progress-value').text('100%');
+					
+					progressBar.css('width', '100%');
+				});
+
 				socket.on('illegal_result', function(data) {
 					if (user.id == data.user) {
 						location.hash = data.current;
@@ -413,9 +432,8 @@
 				});
 
 				$('.ctrl-panel').on('click', '#pdf-upload', function(){
-					var formData = new FormData($('form#pdf-upload-form').get(0));
-
-					let progressBar = $('.progress-bar');
+					let formData = new FormData($('form#pdf-upload-form').get(0));
+					
 					$('.progress-wrapper').show();
 
 					//https://zinoui.com/blog/ajax-request-progress-bar
@@ -428,15 +446,18 @@
 							
 							progressBar.attr('aria-valuenow', e.loaded).css('width', ratio);
 							progressBar.attr('aria-valuemax', e.total).css('width', '100%');
+							socket.emit('upload_processed', { ratio: ratio, room: room });
 						}
 					}
 					xhr.upload.onloadstart = function (e) {
 						progressBar.attr('aria-valuenow', 0).css('width', '0%');
+						socket.emit('upload_started', { room: room });
 					}
 					xhr.upload.onloadend = function (e) {
 						$('#progress-status').text('Reloading Page...');
 						$('#progress-value').text('100%');
 						progressBar.attr('aria-valuenow', e.loaded).css('width', '100%');
+						socket.emit('upload_finished', { room: room });
 					}
 					xhr.send(formData);
 				});

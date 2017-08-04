@@ -250,6 +250,18 @@ lobby_io.on('connection', function(socket){
       user: data.user
     });
   });
+
+  socket.on('upload_started', function(data){
+    lobby_io.in(data.room).emit('upload_started');
+  });
+
+  socket.on('upload_processed', function(data){
+    lobby_io.in(data.room).emit('upload_processed', { ratio: data.ratio });
+  });
+
+  socket.on('upload_finished', function(data){
+    lobby_io.in(data.room).emit('upload_finished');
+  });
 });
 
 console.log('Your presentation is running on http://localhost:' + port);
