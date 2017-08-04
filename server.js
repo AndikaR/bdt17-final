@@ -243,6 +243,13 @@ lobby_io.on('connection', function(socket){
       lobby_io.in(data.room).emit('force_hash', data.hash);
     }
   });
+
+  socket.on('illegal_change', function(data) {
+    lobby_io.in(data.room).emit('illegal_result', { 
+      current: room_list[data.room].current, 
+      user: data.user
+    });
+  });
 });
 
 console.log('Your presentation is running on http://localhost:' + port);

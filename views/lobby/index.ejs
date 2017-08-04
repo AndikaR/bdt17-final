@@ -102,7 +102,8 @@
       });
 
       socket.on('append_room', function(data){
-        $('#portfolio').removeClass('portfolio grid-container portfolio-4 clearfix').append(data.room).focus().addClass('portfolio grid-container portfolio-4 clearfix');
+        $('#portfolio').append(data.room);
+        setTimeout(function(){}, 1000);
       });
 
       socket.on('room_exists', function(msg){

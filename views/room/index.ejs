@@ -318,6 +318,16 @@
 
 				circle.hide();
 
+				$(window).on('hashchange', function() {
+					socket.emit('illegal_change', { room: room, user: user.id});
+				});
+
+				socket.on('illegal_result', function(data) {
+					if (user.id == data.user) {
+						location.hash = data.current;
+					}
+				});
+
 				socket.on('room_deleted', function(){
 					$.redirect(host, {'status': 1}, 'GET');
 				});
@@ -403,7 +413,7 @@
 						contentType: false,
 						type: 'POST',
 						success : function(data) {
-							socket.emit('illegal_hash');
+							//socket.emit('illegal_hash');
 							//location.reload();
 						}
 						,error:function(a, b, c) {
