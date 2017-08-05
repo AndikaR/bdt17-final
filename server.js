@@ -222,6 +222,13 @@ lobby_io.on('connection', function(socket){
     } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
   });
 
+  socket.on('room_deleted', function(data){
+    delete room_list[data.room_id];
+    
+    lobby_io.in(data.room_id).emit('room_deleted');
+    lobby_io.emit('room_removed', { room_id: data.room_id });
+  });
+
   socket.on('disconnect', function(data){
     delete online_client[socket.key];
   });

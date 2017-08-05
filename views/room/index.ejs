@@ -200,6 +200,14 @@
 				$.deck('.slide');
 			}
 
+			function leaveRoom(isUpload = false) {
+				$(window).unload(function() {
+					if (!isUpload) {
+						socket.emit('room_deleted', { room_id: room });
+					}
+				});
+			}
+
 			function reloadSlides(slides) {
 				var $slides = $('.deck-container');
 
@@ -232,6 +240,8 @@
 
 			var room = $('input[name=room_number]').val();
 			var user = JSON.parse($('#user').val());
+
+			leaveRoom();
 
 			//Admin state
 			var mouse_state = false;
@@ -273,6 +283,7 @@
 			socket.on('update_slide', function(data){
 				reloadSlides(data.slides);
 				window.location.hash = data.hash;
+				leaveRoom(false);
 				location.reload();
 			});
 
