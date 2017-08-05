@@ -191,7 +191,7 @@ lobby_io.on('connection', function(socket){
 
   socket.on('create_room', function(data){
     if (!room_list.hasOwnProperty(data.id)) {
-      var identicon  = jdenticon.toPng(data.id, 300);
+      var identicon  = jdenticon.toPng(data.id, 100);
       var admin_data = JSON.parse(data.admin);
       var room_user  = {};
 

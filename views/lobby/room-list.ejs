@@ -1,14 +1,16 @@
-<article class="portfolio-item pf-media pf-others" id="<%= id %>">
-  <div class="portfolio-image">
-    <a href="/room/<%= id %>">
-      <img src="data:image/png;base64,<%= identicon %>">
-    </a>
-    <div class="portfolio-overlay">
-      <a href="/room/<%= id %>" class="center-icon"><i class="icon-line-ellipsis"></i></a>
+<li style="height: 130px;" id="<%= id %>">
+  <div class="testimonial">
+    <div class="testi-image">
+      <a href="/room/<%= id %>"><img src="data:image/png;base64,<%= identicon %>" alt="Room Thumbnail"></a>
+    </div>
+    <div class="testi-content">
+      <span><b>Room ID: <%= '#' + id %></b></span>
+      <br>
+      <span>Room Name : <%= name %></span>
+      <div class="testi-meta">
+        <%= admin.name %>
+        <span><%= admin.email %></span>
+      </div>
     </div>
   </div>
-  <div class="portfolio-desc">
-    <h3><a href="/room/<%= id %>"><%= '#' + id + ' ' + name %></a></h3>
-    <span><b><i class="icon-user"></i> <%= admin.name %></b></span>
-  </div>
-</article>
+</li>
