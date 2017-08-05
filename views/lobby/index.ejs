@@ -106,9 +106,11 @@
         $('#portfolio').append(data.room);
       });
 
-      socket.on('room_exists', function(msg){
-        $('#room-error').text(msg);
-        $('.room-error').show();
+      socket.on('room_exists', function(data){
+        if (data.user == user.id) {
+          $('#room-error').text(data.message);
+          $('.room-error').show();
+        }
       });
 
       socket.on('room_created', function(data){

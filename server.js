@@ -190,9 +190,15 @@ lobby_io.on('connection', function(socket){
   });
 
   socket.on('create_room', function(data){
-    if (!room_list.hasOwnProperty(data.id)) {
+    var admin_data = JSON.parse(data.admin);
+
+    if (data.name == '' || data.id == '') {
+      lobby_io.emit('room_exists', { 
+        user: admin_data.id, 
+        message: 'Room ID or name cannot be empty.' 
+      });
+    } else if (!room_list.hasOwnProperty(data.id)) {
       var identicon  = jdenticon.toPng(data.id, 100);
-      var admin_data = JSON.parse(data.admin);
       var room_user  = {};
 
       room_user[admin_data.email] = 1; //1 for admin, 0 for user
@@ -219,7 +225,10 @@ lobby_io.on('connection', function(socket){
 
         lobby_io.emit('room_created', { room: data.id, admin: admin_data.id });
       });
-    } else lobby_io.emit('room_exists', 'Room with ID : ' + data.id + ' is not available');
+    } else lobby_io.emit('room_exists', { 
+      user: admin_data.id, 
+      message: 'Room with ID : ' + data.id + ' is not available' 
+    });
   });
 
   socket.on('room_deleted', function(data){
