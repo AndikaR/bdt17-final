@@ -132,7 +132,7 @@ function loggedIn(req, res, next) {
 }
 
 function getHost(req) {
-  return req.protocol + 's://' + req.headers.host;
+  return req.protocol + '://' + req.headers.host;
 }
 
 function CustomException(message) {
