@@ -66,7 +66,8 @@ mongoose.model('members', new mongoose.Schema({
 }));
 
 var conn = mongoose.createConnection(
-  'mongodb://localhost/online_presentation', 
+  'mongodb://heroku_4fzm9pht:m5m5rosbjh401nanhtgb1bi2jh@ds117913.mlab.com:17913/heroku_4fzm9pht', //heroku
+  //'mongodb://localhost/online_presentation', //localhost 
   { useMongoClient: true }
 );
 
@@ -131,7 +132,7 @@ function loggedIn(req, res, next) {
 }
 
 function getHost(req) {
-  return req.protocol + '://' + req.headers.host;
+  return req.protocol + 's://' + req.headers.host;
 }
 
 function CustomException(message) {
