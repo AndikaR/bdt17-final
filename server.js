@@ -217,11 +217,11 @@ lobby_io.on('connection', function(socket){
       fse.ensureDir(room_dir, (err) => {
         rmDir(room_dir); //clear directory before used
 
-        let new_room  = room_list[data.id];
-        new_room.id   = data.id;
+        let new_room = room_list[data.id];
+        new_room.id  = data.id;
 
         ejs.renderFile(__dirname + '/views/lobby/room-list.ejs', new_room, function(err, str){
-          lobby_io.emit('append_room', { room: str, room_id: data.id });
+          lobby_io.broadcast.emit('append_room', { room: str, room_id: data.id });
         }); 
 
         lobby_io.emit('room_created', { room: data.id, admin: admin_data.id });
