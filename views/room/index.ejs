@@ -241,7 +241,7 @@
 			var room = $('input[name=room_number]').val();
 			var user = JSON.parse($('#user').val());
 
-			leaveRoom();
+			//leaveRoom();
 
 			//Admin state
 			var mouse_state = false;
@@ -283,7 +283,7 @@
 			socket.on('update_slide', function(data){
 				reloadSlides(data.slides);
 				window.location.hash = data.hash;
-				leaveRoom(false);
+				//leaveRoom(false);
 				location.reload();
 			});
 

@@ -92,14 +92,18 @@
         $('#notRoomModal').modal('show');
       }
 
-      socket.emit('req_available_room');
+      socket.emit('req_available_room', { user: user.id });
 
       socket.on('room_removed', function(data){
         $('#portfolio #' + data.room_id).remove();
       });
 
-      socket.on('res_available_room', function(rooms){
-        $('#portfolio').append(rooms);
+      socket.on('res_available_room', function(data){
+        if (data.user == user.id) {
+          setTimeout(function(){ 
+            $('#portfolio').append(data.list); 
+          }, 1);
+        }
       });
 
       socket.on('append_room', function(data){

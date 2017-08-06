@@ -147,12 +147,12 @@ lobby_io.on('connection', function(socket){
   socket.key = socket.conn.remoteAddress;
   online_client[socket.key] = socket;
 
-  socket.on('req_available_room', function(){
+  socket.on('req_available_room', function(data){
     var list = [];
 
     function checkList() {
       if (list.length === Object.keys(room_list).length)
-        lobby_io.emit('res_available_room', list.join(''));
+        lobby_io.emit('res_available_room', { user: data.user, list: list.join('') });
     }
 
     for (var room in room_list) {
