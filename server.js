@@ -66,8 +66,8 @@ mongoose.model('members', new mongoose.Schema({
 }));
 
 var conn = mongoose.createConnection(
-  'mongodb://heroku_4fzm9pht:m5m5rosbjh401nanhtgb1bi2jh@ds117913.mlab.com:17913/heroku_4fzm9pht', //heroku
-  //'mongodb://localhost/online_presentation', //localhost 
+  //'mongodb://heroku_4fzm9pht:m5m5rosbjh401nanhtgb1bi2jh@ds117913.mlab.com:17913/heroku_4fzm9pht', //heroku
+  'mongodb://localhost/online_presentation', //localhost 
   { useMongoClient: true }
 );
 
@@ -87,6 +87,7 @@ var online  = 0;
 var dir     = path.join(__dirname, '/storage');
 
 //---------------functions---------------
+//belum
 function update_slide(socket, room_dir, room_id) {
   fse.readdir(room_dir, (err, list) => {
     if (err) console.log(err);
@@ -108,6 +109,8 @@ function getSlides(list, room_dir) {
 
   return data;
 }
+
+//end of belum
 
 function rmDir(dirPath, removeSelf = false) {
   try { var files = fse.readdirSync(dirPath); }
