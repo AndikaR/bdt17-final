@@ -14,15 +14,5 @@ for any damages or consequences caused by misused of this project.
 
 ### How do I get set up? ###
 
-Simply 
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+Clone this project to your working directory then run command 'npm install'. To start localy, run command 'node bootstrap.js'
+in your terminal or 'npm start dev' if you prefer to use nodemon.
