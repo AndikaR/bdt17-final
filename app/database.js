@@ -3,8 +3,8 @@ let loadSchema = require('./schema/_loader');
 let $database  = {};
 
 let conn = mongoose.createConnection(
-  //'mongodb://heroku_4fzm9pht:m5m5rosbjh401nanhtgb1bi2jh@ds117913.mlab.com:17913/heroku_4fzm9pht', //heroku
-  'mongodb://localhost/online_presentation', //localhost 
+  'mongodb://heroku_4fzm9pht:m5m5rosbjh401nanhtgb1bi2jh@ds117913.mlab.com:17913/heroku_4fzm9pht', //heroku
+  //'mongodb://localhost/online_presentation', //localhost 
   { useMongoClient: true }
 );
 
