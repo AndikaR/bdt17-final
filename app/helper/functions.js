@@ -24,6 +24,11 @@ fn.loggedIn = (req, res, next) => {
   else res.redirect('/gateway');
 };
 
+fn.checkLogged = (req, res, next) => {
+  if (req.user) res.redirect('/lobby');
+  else next();
+};
+
 fn.getHost = (req) => {
   return req.protocol + '://' + req.headers.host;
 };
