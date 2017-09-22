@@ -1,14 +1,8 @@
-(function(){
+(function($){
   var status = $('#room-status').val();
   var host   = $('#host').val();
   var socket = io.connect(host + '/lobby');
   var user   = JSON.parse($('#user').val());
-
-  if (status == '1') {
-    $('#kickModal').modal('show');
-  } else if (status == '2') {
-    $('#notRoomModal').modal('show');
-  }
 
   socket.emit('req_available_room', { user: user.id });
 
@@ -51,5 +45,13 @@
       name: room_name,
       admin: JSON.stringify(user)
     });
+  });
+
+  $(document).ready(function(){
+    if (status == '1') {
+      $('#kickModal').modal('show');
+    } else if (status == '2') {
+      $('#notRoomModal').modal('show');
+    }
   });
 })(jQuery);
