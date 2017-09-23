@@ -62,6 +62,8 @@ c_admin.fileUpload = (req, res) => {
             
             res.send({ success: 'Completed' });
           });
+        }).catch((error) => {
+          res.send({ error: error });
         });
       });
     });
