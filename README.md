@@ -1,11 +1,13 @@
 # README #
 
 A prototype website for Online Presentation. Create your own room, share slide presentation remotely, and chat with your colleagues.
+
 Demo: http://prototype-x.herokuapp.com
+Note: file upload only working in local environment
 
 ### How do I get set up? ###
 
-Clone this project to your working directory then run command 'npm install'. To start localy, run command 'node bootstrap.js' in your terminal or 'npm start dev' if you prefer to use nodemon.
+Clone this project to your working directory then run command **npm install**. To start locally, run command **node bootstrap.js** in your terminal or **npm start dev** if you prefer to use nodemon. You can access at [localhost port 8082](http://localhost:8082).
 
 ### Disclaimer ###
 
