@@ -71,6 +71,11 @@ $socket.init = () => {
           user: admin_data.id, 
           message: 'Room ID or name cannot be empty.' 
         });
+      } else if (data.id < 1 || data.id > 999) {
+        $socket.lobby_io.emit('room_exists', { 
+          user: admin_data.id, 
+          message: 'Room ID must be between 1 - 999' 
+        });
       } else if (!$socket.room_list.hasOwnProperty(data.id)) {
         let identicon  = jdenticon.toPng(data.id, 100);
         let room_user  = {};
